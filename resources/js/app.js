@@ -13,8 +13,12 @@ import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 
+// Importando a biblioteca de notificação
+import Toast, { useToast } from "vue-toastification";
+import "vue-toastification/dist/index.css"; // Estilos padrão
 
-const appName = import.meta.env.VITE_APP_NAME || 'ProVendas';
+
+const appName = import.meta.env.VITE_APP_NAME || 'Provendas';
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
@@ -23,6 +27,7 @@ createInertiaApp({
         return createApp({ render: () => h(App, props) })
             .use(plugin)
             .use(ZiggyVue)
+            .use(Toast)
             .mount(el);
     },
     progress: {

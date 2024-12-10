@@ -49,12 +49,12 @@
               <div class="flex justify-end gap-4 mt-6">
                 <div>
                     <label for="price" class="block text-sm font-medium text-gray-700">Valor de Venda (R$)</label>
-                    <input type="number" id="price" v-model="form.price" required class="mt-1 px-3 py-2 w-full border border-gray-300 rounded" />
+                    <input type="number" id="price" v-model="form.price" required step="0.01" class="mt-1 px-3 py-2 w-full border border-gray-300 rounded" placeholder="R$ 0,00"/>
                 </div>
 
                 <div>
                     <label for="cost_price" class="block text-sm font-medium text-gray-700">Valor de Custo (R$)</label>
-                    <input type="number" id="cost_price" v-model="form.cost_price" required class="mt-1 px-3 py-2 w-full border border-gray-300 rounded" />
+                    <input type="number" id="cost_price" v-model="form.cost_price" required step="0.01" class="mt-1 px-3 py-2 w-full border border-gray-300 rounded" placeholder="R$ 0,00"/>
                 </div>
 
               </div>

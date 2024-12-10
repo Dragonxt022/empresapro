@@ -26,6 +26,15 @@ class ProductController extends Controller
         // Definindo a quantidade de itens por página
         $perPage = $request->get('per_page', 20);
 
+        // Parâmetros de ordenação
+        $sortBy = $request->get('sort_by', 'name'); // Valor padrão: 'name'
+        $sortDirection = $request->get('sort_direction', 'desc'); // Valor padrão: 'asc'
+
+        // Verificando se a direção de ordenação é válida ('asc' ou 'desc')
+        if (!in_array($sortDirection, ['asc', 'desc'])) {
+            $sortDirection = 'desc'; // Direção padrão
+        }
+
         // Inicia a consulta com os relacionamentos necessários
         $query = Product::with(['variations', 'category'])
                         ->where('empresa_id', $empresaId);
@@ -44,8 +53,8 @@ class ProductController extends Controller
             }
         });
 
-        // Paginação
-        $products = ProductResource::collection($query->paginate($perPage));
+        // Ordenando os resultados
+        $products = ProductResource::collection($query->orderBy($sortBy, $sortDirection)->paginate($perPage));
 
         // Recuperando as categorias para o filtro
         $categories = Categorie::all();
@@ -53,9 +62,10 @@ class ProductController extends Controller
         return Inertia::render('Produtos/Index', [
             'products' => $products,
             'categories' => $categories,
-            'filters' => $request->only(['search', 'category']), // Passando os filtros para o Vue
+            'filters' => $request->only(['search', 'category', 'sort_by', 'sort_direction']), // Passando os filtros e ordenação para o Vue
         ]);
     }
+
 
 
     public function store(Request $request)
@@ -66,8 +76,8 @@ class ProductController extends Controller
         if (!Auth::check()) {
             Log::warning('Usuário não autenticado tentou acessar o método store.');
             return redirect()->route('home')->with('flash', [
-                'banner' => 'Usuário não autenticado.',
-                'bannerStyle' => 'danger', // Estilo para erro
+                'message' => 'Usuário não autenticado.',
+                'type' => 'danger', // Tipo de mensagem de erro
             ]);
         }
 
@@ -91,8 +101,8 @@ class ProductController extends Controller
         } catch (\Throwable $e) {
             Log::error('Erro na validação dos dados.', ['error' => $e->getMessage()]);
             return redirect()->route('home')->with('flash', [
-                'banner' => 'Erro na validação dos dados: ' . $e->getMessage(),
-                'bannerStyle' => 'danger',
+                'message' => 'Erro na validação dos dados: ' . $e->getMessage(),
+                'type' => 'danger',
             ]);
         }
 
@@ -101,8 +111,8 @@ class ProductController extends Controller
 
         if ($imagePath === false) {
             return redirect()->route('home')->with('flash', [
-                'banner' => 'Erro ao salvar a imagem.',
-                'bannerStyle' => 'danger',
+                'message' => 'Erro ao salvar a imagem.',
+                'type' => 'danger',
             ]);
         }
 
@@ -122,19 +132,20 @@ class ProductController extends Controller
         } catch (\Throwable $e) {
             Log::error('Erro ao criar o produto.', ['error' => $e->getMessage()]);
             return redirect()->route('home')->with('flash', [
-                'banner' => 'Erro ao criar o produto: ' . $e->getMessage(),
-                'bannerStyle' => 'danger',
+                'message' => 'Erro ao criar o produto: ' . $e->getMessage(),
+                'type' => 'danger',
             ]);
         }
 
         // Resposta de sucesso
         Log::info('Produto cadastrado com sucesso.', ['product' => $product]);
 
-        return redirect()->route('home')->with('flash', [
-            'banner' => 'Processo para ' . $validated['name'] . ' concluído com sucesso!',
-            'bannerStyle' => 'success', // Estilo para sucesso
+        return back()->with('flash', [
+            'message' => 'Processo para ' . $validated['name'] . ' concluído com sucesso!',
+            'type' => 'success',
         ]);
     }
+
 
 
     /**

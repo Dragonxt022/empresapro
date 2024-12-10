@@ -6,6 +6,7 @@ import Paginetion from '@/Components/Paginetion.vue';
 import ConfirmModal from '@/Components/ConfirmModal.vue';
 import DropdownMenu from '@/Components/DropdownMenu.vue';
 import CadastroProduto from '@/Components/CadastroProduto.vue';
+import Notification2 from '@/Components/Notification2.vue';
 
 // Recebendo os props do Laravel
 const props = defineProps({
@@ -134,6 +135,7 @@ const confirmarExclusao = async () => {
 <template>
     <AppLayout title="Produtos">
         <div class="content-wrapper">
+
             <section class="content-header py-4">
                 <div class="container-fluid">
                     <div class="row mb-2">
@@ -146,6 +148,7 @@ const confirmarExclusao = async () => {
 
             <section class="content">
                 <div class="container-fluid">
+
                     <div class="flex justify-between items-center">
                         <div class="flex space-x-4">
                             <button
@@ -184,7 +187,6 @@ const confirmarExclusao = async () => {
                                 :categories="categories"
 
                             />
-
                         </div>
                     </div>
 
@@ -249,9 +251,10 @@ const confirmarExclusao = async () => {
                                             <input type="checkbox" :checked="selectedProducts.includes(product.id)" @change="selecionarProduto(product.id)" />
                                         </td>
                                         <td class="px-4 py-2 flex items-center gap-2">
-                                            <img :src="'/images/' + (product.image_path || '/images/default-product-image.jpg')" alt="Produto" class="img-circle img-50x50">
+                                            <img :src="'/storage/' + (product.image_path || 'default-product-image.jpg')" alt="Produto" class="img-circle img-50x50">
                                             {{ product.name }}
                                         </td>
+
 
                                         <td class="px-4 py-2 text-center hidden sm:table-cell" :style="{ color: (product.barcode === null || product.barcode === '') ? 'cadetblue' : '' }">
                                             {{ product.barcode || 'Não informado' }}

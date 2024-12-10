@@ -1,9 +1,11 @@
 <script setup>
-import { defineProps } from 'vue';
+import { defineProps, defineAsyncComponent } from 'vue';
+
 import { Head } from '@inertiajs/vue3';
 import Navbar from '@/Components/Navbar.vue';
 import Slidebar from '@/Components/Slidebar.vue';
-import Banner from '@/Components/Banner.vue';
+import Notification2 from '@/Components/Notification2.vue';
+
 
 // Recebendo as props do componente pai
 const props = defineProps({
@@ -14,7 +16,7 @@ const props = defineProps({
 
 <template>
     <Head :title="title" />
-    <Banner />
+    <Notification2 />
     <div class="wrapper">
         <Navbar />
         <!-- Passando o user para o Slidebar -->
