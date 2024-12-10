@@ -17,11 +17,6 @@ class Product_promotion extends Model
         'is_active', // Para controlar se a promoção está ativa
     ];
 
-    // Relacionamento com o produto
-    public function product()
-    {
-        return $this->belongsTo(Product::class);
-    }
 
     /**
      * Verifica se a promoção está ativa

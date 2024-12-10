@@ -19,11 +19,6 @@ class Product_combo extends Model
         'expiration_date', // Data de expiração do combo (se aplicável)
     ];
 
-    // Produto principal (combo)
-    public function product()
-    {
-        return $this->belongsTo(Product::class, 'product_id');
-    }
 
     // Produto que faz parte do combo
     public function component()

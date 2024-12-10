@@ -30,6 +30,10 @@ class Product extends Model
     ];
 
     // Método booted() para aplicar o escopo global
+    public function getImagePathAttribute($value)
+    {
+        return $value ? $value : 'default-product-image.jpg';
+    }
 
 
     public function empresa()
@@ -37,8 +41,7 @@ class Product extends Model
         return $this->belongsTo(Empresa::class);
     }
 
-    // Relacionamento com a categoria
-    public function categories()
+    public function category()
     {
         return $this->belongsTo(Categorie::class);
     }
@@ -55,15 +58,4 @@ class Product extends Model
         return $this->hasMany(Product_variation::class);
     }
 
-    // Relacionamento com combos
-    public function combos()
-    {
-        return $this->hasMany(Product_combo::class);
-    }
-
-    // Relacionamento com promoções
-    public function promotions()
-    {
-        return $this->hasMany(Product_promotion::class);
-    }
 }
