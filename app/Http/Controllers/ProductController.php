@@ -66,7 +66,9 @@ class ProductController extends Controller
         ]);
     }
 
-
+    /**
+     * Display a listing of the resource (API version).
+     */
 
     public function store(Request $request)
     {
@@ -75,7 +77,7 @@ class ProductController extends Controller
         // Verifica autenticação do usuário
         if (!Auth::check()) {
             Log::warning('Usuário não autenticado tentou acessar o método store.');
-            return redirect()->route('home')->with('flash', [
+            return back()->with('flash', [
                 'message' => 'Usuário não autenticado.',
                 'type' => 'danger', // Tipo de mensagem de erro
             ]);
@@ -100,7 +102,7 @@ class ProductController extends Controller
             Log::info('Dados validados com sucesso.', ['validated_data' => $validated]);
         } catch (\Throwable $e) {
             Log::error('Erro na validação dos dados.', ['error' => $e->getMessage()]);
-            return redirect()->route('home')->with('flash', [
+            return back()->with('flash', [
                 'message' => 'Erro na validação dos dados: ' . $e->getMessage(),
                 'type' => 'danger',
             ]);
@@ -110,7 +112,7 @@ class ProductController extends Controller
         $imagePath = $this->handleImageUpload($request);
 
         if ($imagePath === false) {
-            return redirect()->route('home')->with('flash', [
+            return back()->with('flash', [
                 'message' => 'Erro ao salvar a imagem.',
                 'type' => 'danger',
             ]);
@@ -290,6 +292,7 @@ class ProductController extends Controller
             ]);
         }
 
+        // Busca os produtos a serem excluídos
         $products = Product::whereIn('id', $ids)
             ->where('empresa_id', $empresaId)
             ->get();
@@ -301,13 +304,21 @@ class ProductController extends Controller
             ]);
         }
 
+        // Coletar os nomes dos produtos para a mensagem de feedback
+        $productNames = $products->pluck('name')->toArray();
+
+        // Excluir os produtos
         Product::whereIn('id', $products->pluck('id'))->delete();
 
-        return back()->with([
-            'message' => 'Produtos excluídos com sucesso.',
+        // Retorna uma mensagem personalizada
+        return back()->with('flash', [
+            'message' => count($productNames) === 1
+                ? "O produto '{$productNames[0]}' foi excluído com sucesso."
+                : count($productNames) . ' produtos foram excluídos com sucesso.',
             'type' => 'success',
         ]);
     }
+
 
 
 

@@ -12,9 +12,14 @@
         <div class="modal-content w-50 sm:w-4/5 md:w-2/3 lg:w-1/2 xl:w-1/3 bg-white p-6 h-full overflow-auto transform transition-all duration-300 ease-in-out"
           :class="{ 'slide-from-right': isModalOpen, 'slide-to-right': !isModalOpen }">
 
-          <button @click="closeModal" class="absolute top-4 right-4 text-gray-500">
+          <button
+            @click="closeModal"
+            class="close-button absolute top-4 right-4 text-gray-500"
+            >
             <i class="fas fa-times"></i>
           </button>
+
+
 
           <h2 class="text-2xl mb-4">
             <i class="fa-solid fa-box-open"></i>
@@ -49,12 +54,14 @@
               <div class="flex justify-end gap-4 mt-6">
                 <div>
                     <label for="price" class="block text-sm font-medium text-gray-700">Valor de Venda (R$)</label>
-                    <input type="number" id="price" v-model="form.price" required step="0.01" class="mt-1 px-3 py-2 w-full border border-gray-300 rounded" placeholder="R$ 0,00"/>
+                    <InputNumber v-model="form.price" id="price" />
+
+                    <!-- <input type="number" id="price" v-model="form.price" required step="0.01" class="mt-1 px-3 py-2 w-full border border-gray-300 rounded" placeholder="R$ 0,00"/> -->
                 </div>
 
                 <div>
                     <label for="cost_price" class="block text-sm font-medium text-gray-700">Valor de Custo (R$)</label>
-                    <input type="number" id="cost_price" v-model="form.cost_price" required step="0.01" class="mt-1 px-3 py-2 w-full border border-gray-300 rounded" placeholder="R$ 0,00"/>
+                    <InputNumber v-model="form.cost_price" id="cost_price" />
                 </div>
 
               </div>
@@ -76,8 +83,8 @@
                 <input type="file" id="image" @change="handleImageChange" class="hidden" />
               </div>
 
-              <div v-if="imagePreview" class="mt-4">
-                <img :src="imagePreview" alt="Preview da Imagem" class="w-full h-auto rounded-lg" />
+              <div v-if="imagePreview" class="mt-4 flex items-center justify-center">
+                <img :src="imagePreview" alt="Preview da Imagem" class="w-64 h-auto rounded-lg" />
               </div>
 
               <div class="mt-4 text-sm text-gray-600">
@@ -92,18 +99,18 @@
                 <div class="loader border-4 border-t-blue-500 border-gray-200 rounded-full w-12 h-12 animate-spin"></div>
             </div>
           <!-- Botões -->
-            <div class="flex justify-end gap-4 mt-6">
+            <div class="flex gap-4 mt-6">
                 <button
                     type="button"
                     @click="closeModal"
-                    class="px-4 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-100"
+                    class="w-1/2 px-4 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-100"
                     :disabled="isSubmitting"
                 >
                     Cancelar
                 </button>
                 <button
                     type="submit"
-                    class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+                    class="w-1/2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
                     :disabled="isSubmitting"
                 >
                     Cadastrar
@@ -116,95 +123,119 @@
     </div>
   </template>
 
-  <script setup>
-  import { ref } from 'vue';
-  import { Inertia } from '@inertiajs/inertia';
+<script setup>
+    import { ref } from 'vue';
+    import { Inertia } from '@inertiajs/inertia';
+    import InputNumber from './InputNumber.vue';
 
-  const isSubmitting = ref(false);
-  const isModalOpen = ref(false);
-  const form = ref({
-    name: '',
-    category: '',
-    price: null,
-    cost_price: null,
-    stock_quantity: 0,
-    image: null,
-  });
-
-  const props = defineProps({
-    categories: {
-        type: Array,
-        required: true,
-    },
+    const isSubmitting = ref(false);
+    const isModalOpen = ref(false);
+    const form = ref({
+        name: '',
+        category: '',
+        price: null,
+        cost_price: null,
+        stock_quantity: 0,
+        image: null,
     });
 
-
-
-  const imagePreview = ref(null);
-
-  // Abre a modal
-  const openModal = () => {
-    isModalOpen.value = true;
-  };
-
-  // Fecha a modal
-  const closeModal = () => {
-    isModalOpen.value = false;
-    form.value = {
-      name: '',
-      category_id: '',
-      price: null,
-      cost_price: null,
-      stock_quantity: 0,
-      image: null,
-    };
-    imagePreview.value = null;
-  };
-
-  // Função para lidar com a imagem do produto
-  const handleImageChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      form.value.image = file;
-      const reader = new FileReader();
-      reader.onload = () => {
-        imagePreview.value = reader.result;
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const submitForm = async () => {
-    isSubmitting.value = true;
-    const formData = new FormData();
-
-    formData.append('name', form.value.name);
-    formData.append('category_id', form.value.category_id); // Enviando o ID da categoria
-    formData.append('price', form.value.price);
-    formData.append('cost_price', form.value.cost_price);
-
-    formData.append('cost_price', form.value.cost_price);
-    formData.append('stock_quantity', form.value.stock_quantity);
-    if (form.value.image) {
-        formData.append('image', form.value.image);
-    }
-
-    // Envia os dados para a API usando Inertia.js
-    Inertia.post('/produtos/adicionar', formData, {
-        onSuccess: () => {
-            closeModal(); // Fecha a modal em caso de sucesso
-            isSubmitting.value = false; // Reabilita o botão
+    const props = defineProps({
+        categories: {
+            type: Array,
+            required: true,
         },
-        onError: (errors) => {
-            console.error(errors);
-            isSubmitting.value = false; // Reabilita o botão para novas tentativas
-        },
-    });
+        });
+
+
+
+    const imagePreview = ref(null);
+
+    // Abre a modal
+    const openModal = () => {
+        isModalOpen.value = true;
     };
 
-  </script>
+    // Fecha a modal
+    const closeModal = () => {
+        isModalOpen.value = false;
+        form.value = {
+        name: '',
+        category_id: '',
+        price: null,
+        cost_price: null,
+        stock_quantity: 0,
+        image: null,
+        };
+        imagePreview.value = null;
+    };
 
-  <style scoped>
+    // Função para lidar com a imagem do produto
+    const handleImageChange = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+        form.value.image = file;
+        const reader = new FileReader();
+        reader.onload = () => {
+            imagePreview.value = reader.result;
+        };
+        reader.readAsDataURL(file);
+        }
+    };
+
+    const submitForm = async () => {
+        isSubmitting.value = true;
+        const formData = new FormData();
+
+        formData.append('name', form.value.name);
+        formData.append('category_id', form.value.category_id); // Enviando o ID da categoria
+        formData.append('price', form.value.price);
+        formData.append('cost_price', form.value.cost_price);
+
+        formData.append('cost_price', form.value.cost_price);
+        formData.append('stock_quantity', form.value.stock_quantity);
+        if (form.value.image) {
+            formData.append('image', form.value.image);
+        }
+
+        // Envia os dados para a API usando Inertia.js
+        Inertia.post('/produtos/adicionar', formData, {
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: () => {
+                closeModal(); // Fecha a modal em caso de sucesso
+                isSubmitting.value = false; // Reabilita o botão
+            },
+            onError: (errors) => {
+                console.error(errors);
+                isSubmitting.value = false; // Reabilita o botão para novas tentativas
+            },
+        });
+        };
+</script>
+
+<style scoped>
+    .close-button {
+    transition: all 0.2s ease-in-out;
+    border-radius: 50%; /* Deixa o botão arredondado */
+    padding: 5px; /* Adiciona espaço interno suficiente para o ícone */
+    background-color: transparent; /* Fundo transparente por padrão */
+    border: 2px solid #cccccc00; /* Adiciona uma borda para o botão */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    }
+
+    .close-button:hover {
+    color: #ffffff; /* Cor do ícone ao passar o mouse */
+    background-color: red; /* Fundo vermelho */
+    transform: scale(1.1); /* Aumenta o tamanho ao passar o mouse */
+    box-shadow: 0px 4px 10px rgba(16, 16, 16, 0.005); /* Adiciona sombra com tom de vermelho */
+    }
+
+    .close-button i {
+    font-size: 32px; /* Aumenta o tamanho do ícone "X" */
+    }
+
   .loader {
     border-width: 4px;
     border-style: solid;
@@ -243,11 +274,11 @@
 
   /* Estilos de transição */
   .slide-from-right {
-    animation: slideFromRight 0.1s ease-out;
+    animation: slideFromRight 0.3s ease-out;
   }
 
   .slide-to-right {
-    animation: slideToRight 0.1s ease-in;
+    animation: slideToRight 0.3s ease-in;
   }
 
   .fixed {

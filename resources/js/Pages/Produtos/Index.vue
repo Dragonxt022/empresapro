@@ -6,7 +6,9 @@ import Paginetion from '@/Components/Paginetion.vue';
 import ConfirmModal from '@/Components/ConfirmModal.vue';
 import DropdownMenu from '@/Components/DropdownMenu.vue';
 import CadastroProduto from '@/Components/CadastroProduto.vue';
-import Notification2 from '@/Components/Notification2.vue';
+import GlobalNotification from '@/Components/GlobalNotification.vue';
+import EditarProduto from '@/Components/EditarProduto.vue';
+import CadastroCategoria from '@/Components/CadastroCategoria.vue';
 
 // Recebendo os props do Laravel
 const props = defineProps({
@@ -22,26 +24,51 @@ const props = defineProps({
         type: Object,
         required: true,
     },
+    jetstream: {
+        type: Object,
+        required: true,
+    },
 });
 
+
+
 const tab = ref('produtos');
+
+const flash = ref(props.jetstream.flash || {});
 
 const paginaAtual = ref(props.products.meta.current_page);
 const links = ref(props.products.meta.links); // Links da paginação
 
 // Estados reativos baseados nos props recebidos
 const searchTerm = ref(props.filters.search || '');
+
 const selectedCategory = ref(props.filters.category || '');
 const selectedProducts = ref([]);
 // Estados da modal
 const isModalOpen = ref(false);
+
+const isModalOpenEdit = ref(false);
+
 const modalMessage = ref('');
 const isWarning = ref(false);
 
+
+const produtoSelecionado = ref(null);
+
+const editarProduto = (produto) => {
+    produtoSelecionado.value = produto; // Defina o produto selecionado
+    isModalOpenEdit.value = true;
+}
+
+const fecharModal = () => {
+    isModalOpenEdit.value = false;
+    produtoSelecionado.value = null; // Limpa o produto selecionado ao fechar
+};
+
+
 const navegarPagina = async (url) => {
-    // Lógica para navegar para a página selecionada
     if (url) {
-        Inertia.get(url);  // Faz a requisição sem recarregar a página
+        Inertia.get(url, {}, { preserveState: true, preserveScroll: true }); // Evitar recarregamento
     }
 };
 
@@ -97,6 +124,7 @@ const confirmarExclusao = async () => {
     if (!isWarning.value) {
         Inertia.post('/produtos/excluir', { ids: selectedProducts.value }, {
             preserveState: true,
+            preserveScroll: true,
             onSuccess: () => {
                 props.products.data = props.products.data.filter(
                     product => !selectedProducts.value.includes(product.id)
@@ -133,7 +161,10 @@ const confirmarExclusao = async () => {
 </style>
 
 <template>
+
+
     <AppLayout title="Produtos">
+        <GlobalNotification :flash="flash" />
         <div class="content-wrapper">
 
             <section class="content-header py-4">
@@ -177,10 +208,7 @@ const confirmarExclusao = async () => {
                         <div class="flex gap-2">
 
                             <!-- Botão "Nova categoria" apenas visível em telas grandes -->
-                            <button class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-300 hidden md:inline-block">
-                                <i class="fa-solid fa-plus"></i>
-                                Nova categoria
-                            </button>
+                            <CadastroCategoria />
 
                             <!-- Botão "Novo produto" responsivo -->
                             <CadastroProduto
@@ -246,12 +274,12 @@ const confirmarExclusao = async () => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="product in props.products.data" :key="product.id" class="border-b">
-                                        <td class="px-4 py-2">
+                                    <tr v-for="product in props.products.data" :key="product.id" class="border-b" @click="editarProduto(product)">
+                                        <td class="px-4 py-2" @click.stop >
                                             <input type="checkbox" :checked="selectedProducts.includes(product.id)" @change="selecionarProduto(product.id)" />
                                         </td>
                                         <td class="px-4 py-2 flex items-center gap-2">
-                                            <img :src="'/storage/' + (product.image_path || 'default-product-image.jpg')" alt="Produto" class="img-circle img-50x50">
+                                            <img :src="'/storage/' + (product.image_path ||  'default-product-image.jpg')" alt="Produto" class="img-circle img-50x50">
                                             {{ product.name }}
                                         </td>
 
@@ -264,15 +292,21 @@ const confirmarExclusao = async () => {
                                         <td class="px-4 py-2 text-center hidden lg:table-cell">{{ product.stock_quantity}}</td>
                                         <td class="px-4 py-2 text-center hidden xl:table-cell">R$ {{ product.cost_price }}</td>
                                         <td class="px-4 py-2 text-center hidden xl:table-cell">R$ {{ product.price }}</td>
-                                        <td class="px-4 py-2 flex items-center gap-2">
+                                        <td class="px-4 py-2 flex items-center gap-2" @click.stop >
 
-                                            <DropdownMenu />
+                                            <DropdownMenu   />
 
                                         </td>
-
                                     </tr>
                                 </tbody>
                             </table>
+                            <!-- Modal para editar o produto -->
+                            <EditarProduto
+                            v-if="isModalOpenEdit"
+                            :produto="produtoSelecionado"
+                            :categories="categories"
+                            @close="fecharModal"
+                            />
                         </div>
 
                         <!-- Paginador -->

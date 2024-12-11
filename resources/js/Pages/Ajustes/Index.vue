@@ -1,8 +1,15 @@
 <script setup>
 import CardComponent from '@/Components/Cards/CardComponent.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import { usePage } from '@inertiajs/vue3';
+import { router } from '@inertiajs/vue3'; // Importa o router diretamente
 
-
+const navigateTo = (routeName) => {
+    router.visit(route(routeName), {
+        preserveScroll: true, // Mantém o scroll atual
+        preserveState: false // Reseta o estado
+    });
+};
 
 
 </script>
@@ -18,6 +25,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
                             <h1>Ajustes</h1>
                         </div>
                     </div>
+
                 </div><!-- /.container-fluid -->
             </section>
 
@@ -36,7 +44,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 
 
                                 <!-- Card 1 -->
-                                <a :href="route('produtos')" class="nav-link" data-inertia-prefetch>
+                                <a @click.prevent="navigateTo('produtos')" class="nav-link" data-inertia-prefetch>
                                     <CardComponent
                                         icon="fas fa-box"
                                         title="Produtos"
@@ -46,7 +54,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
                                     />
                                 </a>
                                 <!-- Card 2 -->
-                                <a :href="route('ajustes')" class="nav-link">
+                                <a @click.prevent="navigateTo('produtos')" class="nav-link">
                                     <CardComponent
                                         icon="fas fa-tags"
                                         title="Categorias"
@@ -55,7 +63,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
                                     />
                                 </a>
                                 <!-- Card 3 -->
-                                <a :href="route('ajustes')" class="nav-link">
+                                <a @click.prevent="navigateTo('produtos')" class="nav-link">
                                     <CardComponent
                                         icon="fas fa-user-friends"
                                         title="Clientes"
@@ -64,7 +72,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
                                     />
                                 </a>
                                 <!-- Card 4 -->
-                                <a :href="route('ajustes')" class="nav-link">
+                                <a @click.prevent="navigateTo('produtos')" class="nav-link">
                                     <CardComponent
                                         icon="fas fa-users-cog"
                                         title="Usuários"
@@ -86,7 +94,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
                         <div class="col-12">
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
                                 <!-- Card 1 -->
-                                <a :href="route('ajustes')" class="nav-link">
+                                <a @click.prevent="navigateTo('produtos')" class="nav-link">
                                     <CardComponent
                                         icon="fas fa-cash-register"
                                         title="Caixas"
@@ -95,7 +103,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
                                     />
                                 </a>
                                 <!-- Card 2 -->
-                                <a :href="route('ajustes')" class="nav-link">
+                                <a @click.prevent="navigateTo('produtos')" class="nav-link">
                                     <CardComponent
                                         icon="fas fa-chart-pie"
                                         title="Painel"
@@ -117,7 +125,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
                         <div class="col-12">
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
                                 <!-- Card 1 -->
-                                <a :href="route('ajustes')" class="nav-link">
+                                <a @click.prevent="navigateTo('produtos')" class="nav-link">
                                     <CardComponent
                                         icon="fas fa-tools"
                                         title="Geral"

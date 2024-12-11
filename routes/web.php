@@ -38,6 +38,10 @@ Route::middleware([
             return inertia::render('Ajustes/Index');
         })->name('ajustes');
 
+        Route::get('/tabela', function () {
+            return inertia::render('Tabela/Index');
+        })->name('tabela');
+
 
         // Rotas dos Produtos
         Route::get('/produtos', [ProductController::class, 'index'])->name('produtos');

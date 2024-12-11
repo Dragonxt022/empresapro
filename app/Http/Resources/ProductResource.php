@@ -21,7 +21,8 @@ class ProductResource extends JsonResource
             'sku' => $this->sku ?? 'Não informado',  // Substitui null por 'Não informado'
             'barcode' => $this->barcode ?? 'Não informado',  // Substitui null por 'Não informado'
             'description' => $this->description ?? 'Sem descrição',  // Substitui null por 'Sem descrição'
-            'category' => $this->category ? $this->category->name : 'Categoria não encontrada',
+            'category' => $this->category ? $this->category->name : '?',
+            'category_id' => $this->category ? $this->category->id : '?',
             'price' => number_format($this->price ?? 0, 2, ',', '.'),  // Se o preço for nulo, define como 0
             'cost_price' => number_format($this->cost_price ?? 0, 2, ',', '.'),  // Se o preço de custo for nulo, define como 0
             'stock_quantity' => $this->stock_quantity ?? 0,  // Caso a quantidade de estoque seja nula, define como 0
