@@ -14,6 +14,7 @@ const navigateTo = (routeName) => {
 
 </script>
 
+
 <template>
     <AppLayout title="Ajustes">
         <div class="content-wrapper">

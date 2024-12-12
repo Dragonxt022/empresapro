@@ -54,52 +54,21 @@
               <div class="flex justify-end gap-4 mt-6">
                 <div>
                     <label for="price" class="block text-sm font-medium text-gray-700">Valor de Venda (R$)</label>
-                    <InputNumber v-model="form.price" id="price" />
-
-                    <!-- <input type="number" id="price" v-model="form.price" required step="0.01" class="mt-1 px-3 py-2 w-full border border-gray-300 rounded" placeholder="R$ 0,00"/> -->
+                    <InputNumber v-model.number="form.price" id="price" />
                 </div>
 
                 <div>
                     <label for="cost_price" class="block text-sm font-medium text-gray-700">Valor de Custo (R$)</label>
-                    <InputNumber v-model="form.cost_price" id="cost_price" />
+                    <InputNumber v-model.number="form.cost_price" id="cost_price" />
                 </div>
 
               </div>
 
               <div>
                 <label for="stock_quantity" class="block text-sm font-medium text-gray-700">Estoque</label>
-                <input type="number" id="stock_quantity" v-model="form.stock_quantity" required class="mt-1 px-3 py-2 w-full border border-gray-300 rounded" />
+                <input type="number" id="stock_quantity" v-model.number="form.stock_quantity" required class="mt-1 px-3 py-2 w-full border border-gray-300 rounded" />
               </div>
-            </div>
-
-            <!-- Segunda coluna (foto do produto) -->
-            <div class="space-y-4">
-              <div>
-                <label for="image" class="block text-sm font-medium text-gray-700">Foto do Produto</label>
-                <!-- Botão para enviar a imagem com ícone -->
-                <label for="image" class="flex items-center justify-center bg-blue-500 text-white px-4 py-2 rounded cursor-pointer hover:bg-blue-600">
-                  <i class="fas fa-image mr-2"></i>Enviar imagem
-                </label>
-                <input type="file" id="image" @change="handleImageChange" class="hidden" />
-              </div>
-
-              <div v-if="imagePreview" class="mt-4 flex items-center justify-center">
-                <img :src="imagePreview" alt="Preview da Imagem" class="w-64 h-auto rounded-lg" />
-              </div>
-
-              <div class="mt-4 text-sm text-gray-600">
-                <p>Formatos: JPEG, JPG e PNG</p>
-                <p>Resolução ideal: 400x400 ou 800x800</p>
-                <p class="font-semibold text-purple-600">Sugestões de foto</p>
-                <p class="text-gray-400">Nenhum resultado encontrado...</p>
-              </div>
-            </div>
-            <!-- Loader centralizado -->
-            <div v-if="isSubmitting" class="absolute inset-0 flex justify-center items-center bg-gray-50 bg-opacity-50">
-                <div class="loader border-4 border-t-blue-500 border-gray-200 rounded-full w-12 h-12 animate-spin"></div>
-            </div>
-          <!-- Botões -->
-            <div class="flex gap-4 mt-6">
+              <div class="flex gap-4 mt-6">
                 <button
                     type="button"
                     @click="closeModal"
@@ -116,12 +85,62 @@
                     Cadastrar
                 </button>
             </div>
+            </div>
+
+            <!-- Segunda coluna (foto do produto) -->
+            <div class="space-y-4">
+                <div>
+                    <label for="image" class="block text-sm font-medium text-gray-700 mb-2">Foto do Produto</label>
+
+                    <!-- Área para upload da imagem ou preview -->
+                    <div
+                        class="flex  flex-col items-center justify-center w-full h-64 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 hover:border-gray-400 transition cursor-pointer"
+                        @click="triggerImageUpload"
+
+                        >
+                        <!-- Se houver preview da imagem, exibe a imagem clicável -->
+                        <template v-if="imagePreview">
+                            <img
+                                :src="imagePreview"
+                                alt="Preview da Imagem"
+                                class="object-contain w-[90%] h-[90%] rounded-md transition-transform duration-300 ease-in-out hover:scale-105"
+                            />
+                        </template>
+
+                        <!-- Caso contrário, exibe o layout original com o ícone e texto -->
+                        <template v-else>
+                            <i class="fas fa-box-open text-gray-400 text-4xl mb-4"></i>
+                            <p class="text-gray-600 text-sm font-medium">Enviar imagem</p>
+                            <p class="text-gray-400 text-xs">Formatos permitidos: JPEG, JPG, PNG <br> Resolução ideal: 400x400 ou 800x800</p>
+                        </template>
+                    </div>
+
+                    <!-- Input oculto para selecionar imagem -->
+                    <input type="file" id="image" ref="imageInput" @change="handleImageChange" class="hidden" />
+                </div>
+
+                <!-- Informações adicionais -->
+                <div class="mt-4 text-sm text-gray-600">
+                    <p class="font-semibold text-purple-600">Sugestões de foto</p>
+                    <span>Nada no momento...</span>
+                </div>
+
+                <div>
+                    <label for="barcode" class="block text-sm font-medium text-gray-700">Código de Barras (EAN)</label>
+                    <input type="text" id="barcode" v-model="form.barcode" required class="mt-1 px-3 py-2 w-full border border-gray-300 rounded" />
+                </div>
+            </div>
+
+            <!-- Loader centralizado -->
+            <div v-if="isSubmitting" class="absolute inset-0 flex justify-center items-center bg-gray-50 bg-opacity-50">
+                <div class="loader border-4 border-t-blue-500 border-gray-200 rounded-full w-12 h-12 animate-spin"></div>
+            </div>
           </form>
 
         </div>
       </div>
     </div>
-  </template>
+</template>
 
 <script setup>
     import { ref } from 'vue';
@@ -130,11 +149,15 @@
 
     const isSubmitting = ref(false);
     const isModalOpen = ref(false);
+    const imageInput = ref(null);
+    const imagePreview = ref(null);
+
     const form = ref({
         name: '',
-        category: '',
+        category_id: '',
         price: null,
         cost_price: null,
+        barcode: '',
         stock_quantity: 0,
         image: null,
     });
@@ -144,11 +167,7 @@
             type: Array,
             required: true,
         },
-        });
-
-
-
-    const imagePreview = ref(null);
+    });
 
     // Abre a modal
     const openModal = () => {
@@ -159,27 +178,40 @@
     const closeModal = () => {
         isModalOpen.value = false;
         form.value = {
-        name: '',
-        category_id: '',
-        price: null,
-        cost_price: null,
-        stock_quantity: 0,
-        image: null,
+            name: '',
+            category_id: '',
+            price: null,
+            cost_price: null,
+            barcode: '',
+            stock_quantity: 0,
+            image: null,
         };
-        imagePreview.value = null;
+        imagePreview.value = null; // Reseta o preview ao fechar a modal
+    };
+
+    const triggerImageUpload = () => {
+        if (imageInput.value) {
+            imageInput.value.click(); // Simula o clique no input de arquivo
+        }
     };
 
     // Função para lidar com a imagem do produto
     const handleImageChange = (event) => {
         const file = event.target.files[0];
-        if (file) {
+        if (!file) return;
+
+        const validFormats = ['image/jpeg', 'image/png'];
+        if (!validFormats.includes(file.type)) {
+            alert('Formato inválido! Apenas arquivos JPEG e PNG são permitidos.');
+            return;
+        }
+
         form.value.image = file;
         const reader = new FileReader();
         reader.onload = () => {
-            imagePreview.value = reader.result;
+            imagePreview.value = reader.result; // Atualiza o preview da imagem
         };
         reader.readAsDataURL(file);
-        }
     };
 
     const submitForm = async () => {
@@ -188,10 +220,11 @@
 
         formData.append('name', form.value.name);
         formData.append('category_id', form.value.category_id); // Enviando o ID da categoria
-        formData.append('price', form.value.price);
-        formData.append('cost_price', form.value.cost_price);
 
-        formData.append('cost_price', form.value.cost_price);
+        // Divide o preço e custo por 100 para enviar em reais, ao invés de centavos
+        formData.append('price', (form.value.price / 100).toFixed(2));
+        formData.append('cost_price', (form.value.cost_price / 100).toFixed(2));
+        formData.append('barcode', form.value.barcode);
         formData.append('stock_quantity', form.value.stock_quantity);
         if (form.value.image) {
             formData.append('image', form.value.image);
@@ -210,8 +243,9 @@
                 isSubmitting.value = false; // Reabilita o botão para novas tentativas
             },
         });
-        };
+    };
 </script>
+
 
 <style scoped>
     .close-button {

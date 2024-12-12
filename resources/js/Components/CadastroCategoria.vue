@@ -30,53 +30,70 @@
 
               </div>
 
+              <!-- Botões -->
+                <div class="flex gap-4 mt-6">
+                    <button
+                        type="button"
+                        @click="closeModal"
+                        class="w-1/2 px-4 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-100"
+                        :disabled="isSubmitting"
+                    >
+                        Cancelar
+                    </button>
+                    <button
+                        type="submit"
+                        class="w-1/2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+                        :disabled="isSubmitting"
+                    >
+                        Cadastrar
+                    </button>
+                </div>
+
             </div>
 
             <!-- Segunda coluna (foto do produto) -->
             <div class="space-y-4">
-              <div>
-                <label for="image" class="block text-sm font-medium text-gray-700">Foto do Produto</label>
-                <!-- Botão para enviar a imagem com ícone -->
-                <label for="image" class="flex items-center justify-center bg-blue-500 text-white px-4 py-2 rounded cursor-pointer hover:bg-blue-600">
-                  <i class="fas fa-image mr-2"></i>Enviar imagem
-                </label>
-                <input type="file" id="image" @change="handleImageChange" class="hidden" />
-              </div>
+                <div>
+                    <label for="image" class="block text-sm font-medium text-gray-700 mb-2">Foto da Categoria</label>
 
-              <div v-if="imagePreview" class="mt-4 flex items-center justify-center">
-                <img :src="imagePreview" alt="Preview da Imagem" class="w-64 h-auto rounded-lg" />
-              </div>
+                    <!-- Área para upload da imagem ou preview -->
+                    <div
+                        class="flex  flex-col items-center justify-center w-full h-64 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 hover:border-gray-400 transition cursor-pointer"
+                        @click="triggerImageUpload"
 
-              <div class="mt-4 text-sm text-gray-600">
-                <p>Formatos: JPEG, JPG e PNG</p>
-                <p>Resolução ideal: 400x400 ou 800x800</p>
-                <p class="font-semibold text-purple-600">Sugestões de foto</p>
-                <p class="text-gray-400">Nenhum resultado encontrado...</p>
-              </div>
+                        >
+                        <!-- Se houver preview da imagem, exibe a imagem clicável -->
+                        <template v-if="imagePreview">
+                            <img
+                                :src="imagePreview"
+                                alt="Preview da Imagem"
+                                class="object-contain w-[90%] h-[90%] rounded-md transition-transform duration-300 ease-in-out hover:scale-105"
+                            />
+                        </template>
+
+                        <!-- Caso contrário, exibe o layout original com o ícone e texto -->
+                        <template v-else>
+                            <i class="fas fa-box-open text-gray-400 text-4xl mb-4"></i>
+                            <p class="text-gray-600 text-sm font-medium">Enviar imagem</p>
+                            <p class="text-gray-400 text-xs">Formatos permitidos: JPEG, JPG, PNG <br> Resolução ideal: 400x400 ou 800x800</p>
+                        </template>
+                    </div>
+
+                    <!-- Input oculto para selecionar imagem -->
+                    <input type="file" id="image" ref="imageInput" @change="handleImageChange" class="hidden" />
+                </div>
+
+                <!-- Informações adicionais -->
+                <div class="mt-4 text-sm text-gray-600">
+                    <p class="font-semibold text-purple-600">Sugestões de foto</p>
+                    <span>Nada no momento...</span>
+                </div>
+
             </div>
             <!-- Loader centralizado -->
             <div v-if="isSubmitting" class="absolute inset-0 flex justify-center items-center bg-gray-50 bg-opacity-50">
                 <div class="loader border-4 border-t-blue-500 border-gray-200 rounded-full w-12 h-12 animate-spin"></div>
             </div>
-          <!-- Botões -->
-            <div class="flex gap-4 mt-6">
-                <button
-                    type="button"
-                    @click="closeModal"
-                    class="w-1/2 px-4 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-100"
-                    :disabled="isSubmitting"
-                >
-                    Cancelar
-                </button>
-                <button
-                    type="submit"
-                    class="w-1/2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
-                    :disabled="isSubmitting"
-                >
-                    Cadastrar
-                </button>
-            </div>
-
 
           </form>
 
@@ -91,13 +108,15 @@
 
   const isSubmitting = ref(false);
   const isModalOpen = ref(false);
+  const imageInput = ref(null);
+  const imagePreview = ref(null);
+
   const form = ref({
     name: '',
 
     image: null,
   });
 
-  const imagePreview = ref(null);
 
   // Abre a modal
   const openModalCategoria = () => {
@@ -115,18 +134,30 @@
   };
 
   // Função para lidar com a imagem do produto
-  const handleImageChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      form.value.image = file;
-      const reader = new FileReader();
-      reader.onload = () => {
-        imagePreview.value = reader.result;
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+  const triggerImageUpload = () => {
+        if (imageInput.value) {
+            imageInput.value.click(); // Simula o clique no input de arquivo
+        }
+    };
 
+    // Função para lidar com a imagem do produto
+    const handleImageChange = (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const validFormats = ['image/jpeg', 'image/png'];
+        if (!validFormats.includes(file.type)) {
+            alert('Formato inválido! Apenas arquivos JPEG e PNG são permitidos.');
+            return;
+        }
+
+        form.value.image = file;
+        const reader = new FileReader();
+        reader.onload = () => {
+            imagePreview.value = reader.result; // Atualiza o preview da imagem
+        };
+        reader.readAsDataURL(file);
+    };
   const submitForm = async () => {
     isSubmitting.value = true;
     const formData = new FormData();

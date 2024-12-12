@@ -47,3 +47,25 @@ defineProps({
 
 defineEmits(['cancelar', 'confirmar']);
 </script>
+
+<style>
+    .fade-enter-active,
+    .fade-leave-active {
+    transition: opacity 0.3s;
+    }
+
+    .fade-enter-from,
+    .fade-leave-to {
+    opacity: 0;
+    }
+
+    .fade-enter-to,
+    .fade-leave-from {
+    opacity: 1;
+    }
+
+    .fixed {
+    z-index: 9999;
+  }
+
+</style>

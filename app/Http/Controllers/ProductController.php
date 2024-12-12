@@ -79,7 +79,7 @@ class ProductController extends Controller
             Log::warning('Usuário não autenticado tentou acessar o método store.');
             return back()->with('flash', [
                 'message' => 'Usuário não autenticado.',
-                'type' => 'danger', // Tipo de mensagem de erro
+                'type' => 'error', // Tipo de mensagem de erro
             ]);
         }
 
@@ -95,6 +95,7 @@ class ProductController extends Controller
                 'category_id' => 'required|exists:categories,id',
                 'price' => 'required|numeric',
                 'cost_price' => 'nullable|numeric',
+                'barcode' => 'nullable|numeric',
                 'stock_quantity' => 'required|integer|min:0',
                 'image' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
             ]);
@@ -104,7 +105,7 @@ class ProductController extends Controller
             Log::error('Erro na validação dos dados.', ['error' => $e->getMessage()]);
             return back()->with('flash', [
                 'message' => 'Erro na validação dos dados: ' . $e->getMessage(),
-                'type' => 'danger',
+                'type' => 'error',
             ]);
         }
 
@@ -114,7 +115,7 @@ class ProductController extends Controller
         if ($imagePath === false) {
             return back()->with('flash', [
                 'message' => 'Erro ao salvar a imagem.',
-                'type' => 'danger',
+                'type' => 'error',
             ]);
         }
 
@@ -125,6 +126,7 @@ class ProductController extends Controller
                 'category_id' => $validated['category_id'],
                 'price' => $validated['price'],
                 'cost_price' => $validated['cost_price'],
+                'barcode' => $validated['barcode'],
                 'stock_quantity' => $validated['stock_quantity'],
                 'image_path' => $imagePath,
                 'empresa_id' => $empresaId,
@@ -135,7 +137,7 @@ class ProductController extends Controller
             Log::error('Erro ao criar o produto.', ['error' => $e->getMessage()]);
             return redirect()->route('home')->with('flash', [
                 'message' => 'Erro ao criar o produto: ' . $e->getMessage(),
-                'type' => 'danger',
+                'type' => 'error',
             ]);
         }
 
@@ -160,17 +162,32 @@ class ProductController extends Controller
     {
         if ($request->hasFile('image')) {
             try {
+                // Realiza o upload da imagem
                 $imagePath = $request->file('image')->store('images', 'public');
+
+                // Log de sucesso, mas sem retorno de mensagem para o usuário
                 Log::info('Imagem salva com sucesso.', ['image_path' => $imagePath]);
+
+                // Apenas retorna o caminho da imagem sem mensagem de sucesso explícita
                 return $imagePath;
             } catch (\Throwable $e) {
+                // Log de erro caso ocorra uma exceção
                 Log::error('Erro ao salvar a imagem.', ['error' => $e->getMessage()]);
-                return false;
+
+                // Retorna a mensagem de erro
+                return response()->json([
+                    'message' => 'Erro ao salvar a imagem.',
+                    'error' => $e->getMessage()
+                ], 500);
             }
         }
 
+        // Caso não haja arquivo enviado, não fazer nada ou retornar um erro genérico
         return null;
     }
+
+
+
 
 
     /**
