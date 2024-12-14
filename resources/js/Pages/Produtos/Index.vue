@@ -234,7 +234,7 @@ const confirmarExclusao = async () => {
                             >
                                 Produtos
                             </button>
-                            <button
+                            <!-- <button
                                 class="px-4 py-3 rounded-t-lg focus:outline-none"
                                 :class="{
                                     'bg-white text-blue-600 font-semibold': tab === 'complementos',
@@ -243,7 +243,7 @@ const confirmarExclusao = async () => {
                                 @click="tab = 'complementos'"
                             >
                                 Complementos
-                            </button>
+                            </button> -->
                         </div>
 
                         <div class="flex gap-2">

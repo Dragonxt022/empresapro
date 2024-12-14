@@ -268,6 +268,8 @@
         }
 
         try {
+            let images = [];
+
             if (useInternalApi.value) {
                 // Tenta buscar na API interna
                 const response = await axios.get('/products/images', {
@@ -275,16 +277,16 @@
                 });
 
                 if (response.data.length > 0) {
-                    // Se encontrar resultados na sua API interna
-                    suggestedImages.value = response.data;
+                    // Se encontrar resultados na API interna
+                    images = response.data;
+                    suggestedImages.value = images;
                     lastSearch.value = searchQuery;
-                    lastImages.value = response.data; // Atualiza as últimas imagens válidas
-                    return;
+                    lastImages.value = images; // Atualiza as últimas imagens válidas
                 }
             }
 
-            // Caso a API interna não encontre resultados ou se queremos usar a API do Google
-            if (useGoogleApi.value && dailyQueryCount.value < dailyQueryLimit) {
+            // Se a API interna não encontrar resultados, e se quisermos usar a API do Google
+            if (useGoogleApi.value && images.length === 0 && dailyQueryCount.value < dailyQueryLimit) {
                 // Realiza a busca na API do Google
                 const googleResponse = await axios.get('https://www.googleapis.com/customsearch/v1', {
                     params: {
@@ -305,19 +307,65 @@
                     return validFormats.includes(item.mime);
                 });
 
-                suggestedImages.value = filteredImages;
+                // Atualiza as imagens sugeridas com as imagens filtradas do Google
+                if (filteredImages.length > 0) {
+                    images = filteredImages;
+                }
+
+                suggestedImages.value = images;
                 lastSearch.value = searchQuery;
-                lastImages.value = filteredImages; // Atualiza as últimas imagens válidas
+                lastImages.value = images; // Atualiza as últimas imagens válidas
             } else if (dailyQueryCount.value >= dailyQueryLimit) {
                 apiLimitReached.value = true;
                 // notify.error('Limite de consultas atingido para a busca de imagens do Google.');
             }
 
+            // Caso não haja imagens de nenhuma das fontes, adicione uma mensagem de erro ou alerta
+            if (images.length === 0) {
+                // notify.error('Nenhuma imagem encontrada.');
+                console.log('Nenhuma imagem encontrada para:', searchQuery);
+            }
+
         } catch (error) {
             console.error('Erro na busca de imagens:', error);
             // notify.error('Erro ao buscar imagens.');
+
+            // Tenta a outra API se a primeira falhar
+            if (useInternalApi.value && useGoogleApi.value) {
+                try {
+                    const googleResponse = await axios.get('https://www.googleapis.com/customsearch/v1', {
+                        params: {
+                            key: apiKey,
+                            cx: cx,
+                            searchType: 'image',
+                            q: searchQuery,
+                            num: 10, // Retorna até 10 imagens
+                        },
+                    });
+
+                    // Incrementa o contador local apenas em buscas bem-sucedidas
+                    dailyQueryCount.value++;
+
+                    // Filtra os resultados para incluir apenas imagens válidas
+                    const validFormats = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+                    const filteredImages = (googleResponse.data.items || []).filter(item => {
+                        return validFormats.includes(item.mime);
+                    });
+
+                    // Atualiza as imagens sugeridas com as imagens filtradas do Google
+                    if (filteredImages.length > 0) {
+                        suggestedImages.value = filteredImages;
+                        lastSearch.value = searchQuery;
+                        lastImages.value = filteredImages; // Atualiza as últimas imagens válidas
+                    }
+
+                } catch (googleError) {
+                    console.error('Erro na busca de imagens na API do Google:', googleError);
+                    // notify.error('Erro ao buscar imagens na API do Google.');
+                }
+            }
         }
-    }, 2000); // Aguarda 3 segundos antes de executar novamente
+    }, 2000); // Aguarda 2 segundos antes de executar novamente
 
     function resetDailyQueryCount() {
         dailyQueryCount.value = 0;
@@ -326,6 +374,7 @@
 
     // Agende a reinicialização para o início do próximo dia
     setTimeout(resetDailyQueryCount, 24 * 60 * 60 * 1000); // 24 horas em milissegundos
+
 
     const setImage = async (imageUrl) => {
         try {
