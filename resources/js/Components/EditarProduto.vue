@@ -28,9 +28,13 @@
               </div>
 
               <div v-if="categories && categories.length > 0">
-                <label for="category" class="block text-sm font-medium text-gray-700">
-                    Categoria <i class="fa-solid fa-circle-plus" style="color: #0079d6;"></i>
-                </label>
+                <div class="flex justify-content-evenly gap-4 mt-6">
+                    <label for="category" class="text-sm font-medium text-gray-700">Categoria</label>
+                    <button @click.stop="ativarCategoria" style="color: #0079d6; cursor: pointer;">
+                        <i class="fa-solid fa-circle-plus"></i>
+                    </button>
+
+                </div>
                 <select id="category" v-model="form.category_id" required class="mt-1 px-3 py-2 w-full border border-gray-300 rounded">
                     <option value="">Selecione a Categoria</option>
                     <option v-for="category in categories" :key="category.id" :value="category.id">
@@ -45,7 +49,7 @@
               <div class="flex justify-end gap-4 mt-6">
                 <div>
                   <label for="price" class="block text-sm font-medium text-gray-700">Valor de Venda (R$)</label>
-                  <InputNumberEdit v-model.number="form.price" id="price" />
+                  <InputNumberEdit v-model.number="form.price" id="price" required />
 
                 </div>
 
@@ -55,10 +59,18 @@
                 </div>
               </div>
 
-              <div>
-                <label for="stock_quantity" class="block text-sm font-medium text-gray-700">Estoque</label>
-                <input type="number" id="stock_quantity" v-model="form.stock_quantity" required class="mt-1 px-3 py-2 w-full border border-gray-300 rounded" />
-              </div>
+              <div class="flex gap-4 mt-6">
+
+                <div>
+                    <label for="stock_quantity" class="block text-sm font-medium text-gray-700">Estoque</label>
+                    <input type="number" id="stock_quantity" v-model.number="form.stock_quantity" class="mt-1 px-3 py-2 w-full border border-gray-300 rounded" />
+                </div>
+
+                <div>
+                    <label for="min_stock" class="block text-sm font-medium text-gray-700">Estoque Minimo</label>
+                    <input type="number" id="min_stock" v-model.number="form.min_stock" class="mt-1 px-3 py-2 w-full border border-gray-300 rounded" title="Estoque minimo para que seja avisado!"/>
+                </div>
+            </div>
               <!-- Botões -->
                 <div class="flex gap-4 mt-6">
                     <button
@@ -120,7 +132,7 @@
 
                 <div>
                     <label for="barcode" class="block text-sm font-medium text-gray-700">Código de Barras (EAN)</label>
-                    <input type="text" id="barcode" v-model="form.barcode" required class="mt-1 px-3 py-2 w-full border border-gray-300 rounded" />
+                    <input type="text" id="barcode" v-model="form.barcode" class="mt-1 px-3 py-2 w-full border border-gray-300 rounded" />
                 </div>
             </div>
 
@@ -139,6 +151,9 @@
 
 <script>
 import InputNumberEdit from './InputNumberEdit.vue';
+import { notify } from '@/Plugins/notify';
+import { router } from '@inertiajs/vue3';
+
 
 export default {
   components: {
@@ -159,6 +174,7 @@ export default {
         cost_price: parseFloat(this.produto.cost_price).toFixed(2) * 100 || 0,
       },
       imagePreview: null,
+      imageInput: this.produto.image_path || null,
       isSubmitting: false,
       isModalOpenEdit: true,
     };
@@ -171,36 +187,58 @@ export default {
         this.$emit('close');
       }, 300);
     },
+
     // Submete o formulário
     submitForm() {
-      this.isSubmitting = true;
-      const formData = new FormData();
+        this.isSubmitting = true;
+        const formData = new FormData();
 
-      formData.append('name', this.form.name);
-      formData.append('category_id', this.form.category_id);
-      formData.append('price', (this.form.price / 100).toFixed(2));
-      formData.append('cost_price', (this.form.cost_price / 100).toFixed(2));
-      formData.append('barcode', this.form.barcode);
-      formData.append('stock_quantity', this.form.stock_quantity);
-      if (this.imagePreview) {
-        formData.append('image', this.$refs.imageInput.files[0]);
-      }
+        formData.append('name', this.form.name);
+        formData.append('category_id', this.form.category_id);
+        formData.append('price', (this.form.price / 100).toFixed(2));
+        formData.append('cost_price', (this.form.cost_price / 100).toFixed(2));
+        formData.append('barcode', this.form.barcode);
+        formData.append('stock_quantity', this.form.stock_quantity);
+        formData.append('min_stock', this.form.min_stock);
 
-      // Simulação de envio
-      console.log('Enviando produto atualizado...', this.form);
-      setTimeout(() => {
-        console.log('Produto atualizado com sucesso!');
-        this.isSubmitting = false;
-        this.closeModal();
-      }, 1000);
+        // Manipula o envio da imagem
+        if (this.imagePreview) {
+            // Se uma nova imagem foi selecionada
+            formData.append('image', this.$refs.imageInput.files[0]);
+        } else if (this.form.image_path) {
+            // Se nenhuma nova imagem foi selecionada, envia o caminho atual
+            formData.append('current_image_path', this.form.image_path);
+        }
+
+        router.visit(route('produto.update', this.form.id), {
+            method: 'post',
+            data: formData,
+            preserveState: true,
+            preserveScroll: true,
+            onStart: () => {
+                this.isSubmitting = true;
+            },
+            onFinish: () => {
+                this.isSubmitting = false;
+            },
+            onSuccess: (page) => {
+                notify.success('Item atualizado');
+                this.closeModal();
+            },
+            onError: (errors) => {
+                console.error(errors);
+                notify.error('Erro ao atualizar o item.');
+            },
+        });
     },
+
     // Manipula o upload de imagem
     handleImageChange(event) {
       const file = event.target.files[0];
       if (file) {
         const validFormats = ['image/jpeg', 'image/png'];
         if (!validFormats.includes(file.type)) {
-          alert('Formato inválido! Apenas arquivos JPEG e PNG são permitidos.');
+            notify.error('Formato inválido! Apenas arquivos JPEG e PNG são permitidos.');
           return;
         }
         this.imagePreview = URL.createObjectURL(file);
@@ -218,6 +256,7 @@ export default {
   },
 };
 </script>
+
 
 
 <style scoped>
@@ -260,8 +299,6 @@ export default {
         transform: rotate(360deg);
     }
   }
-
-  /* Fim do Loder */
 
   /* Animação de deslizar da direita para a entrada */
   @keyframes slideFromRight {

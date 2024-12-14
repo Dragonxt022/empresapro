@@ -4,16 +4,22 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ProductResource;
+use App\Traits\HandlesImageUploads;
+
 use App\Models\Categorie;
 use App\Models\Product;
 use App\Models\Product_variation;
+use App\Models\ProductImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
+
 
 class ProductController extends Controller
 {
+    use HandlesImageUploads;
 
     /**
      * Display a listing of the resource.
@@ -28,7 +34,7 @@ class ProductController extends Controller
 
         // Parâmetros de ordenação
         $sortBy = $request->get('sort_by', 'name'); // Valor padrão: 'name'
-        $sortDirection = $request->get('sort_direction', 'desc'); // Valor padrão: 'asc'
+        $sortDirection = $request->get('sort_direction', 'desc'); // Valor padrão: 'desc'
 
         // Verificando se a direção de ordenação é válida ('asc' ou 'desc')
         if (!in_array($sortDirection, ['asc', 'desc'])) {
@@ -56,12 +62,12 @@ class ProductController extends Controller
         // Ordenando os resultados
         $products = ProductResource::collection($query->orderBy($sortBy, $sortDirection)->paginate($perPage));
 
-        // Recuperando as categorias para o filtro
-        $categories = Categorie::all();
+        // Recuperando as categorias filtradas pela empresa do usuário
+        $categories = Categorie::where('empresa_id', $empresaId)->get();
 
         return Inertia::render('Produtos/Index', [
             'products' => $products,
-            'categories' => $categories,
+            'categories' => $categories, // Envia apenas as categorias do `empresa_id` do usuário
             'filters' => $request->only(['search', 'category', 'sort_by', 'sort_direction']), // Passando os filtros e ordenação para o Vue
         ]);
     }
@@ -70,125 +76,116 @@ class ProductController extends Controller
      * Display a listing of the resource (API version).
      */
 
-    public function store(Request $request)
-    {
-        Log::info('Início do método store.');
+     public function store(Request $request)
+     {
+         Log::info('Início do método store.');
 
-        // Verifica autenticação do usuário
-        if (!Auth::check()) {
-            Log::warning('Usuário não autenticado tentou acessar o método store.');
-            return back()->with('flash', [
-                'message' => 'Usuário não autenticado.',
-                'type' => 'error', // Tipo de mensagem de erro
-            ]);
-        }
+         // Verifica autenticação do usuário
+         if (!Auth::check()) {
+             Log::warning('Usuário não autenticado tentou acessar o método store.');
+             return back()->with('flash', [
+                 'message' => 'Usuário não autenticado.',
+                 'type' => 'error',
+             ]);
+         }
 
-        $user = Auth::user();
-        $empresaId = $user->empresa_id;
+         $user = Auth::user();
+         $empresaId = $user->empresa_id;
 
-        Log::info('Usuário autenticado.', ['user_id' => $user->id, 'empresa_id' => $empresaId]);
+         Log::info('Usuário autenticado.', ['user_id' => $user->id, 'empresa_id' => $empresaId]);
 
-        // Validação dos dados recebidos
-        try {
-            $validated = $request->validate([
-                'name' => 'required|string|max:255',
-                'category_id' => 'required|exists:categories,id',
-                'price' => 'required|numeric',
-                'cost_price' => 'nullable|numeric',
-                'barcode' => 'nullable|numeric',
-                'stock_quantity' => 'required|integer|min:0',
-                'image' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
-            ]);
+         // Validação dos dados recebidos
+         try {
+             $validated = $request->validate([
+                 'name' => 'required|string|max:255',
+                 'category_id' => 'required|exists:categories,id',
+                 'price' => 'required|numeric',
+                 'cost_price' => 'nullable|numeric',
+                 'barcode' => 'nullable|numeric',
+                 'stock_quantity' => 'required|integer|min:0',
+                 'min_stock' => 'nullable|integer',
+                 'image' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
+             ]);
 
-            Log::info('Dados validados com sucesso.', ['validated_data' => $validated]);
-        } catch (\Throwable $e) {
-            Log::error('Erro na validação dos dados.', ['error' => $e->getMessage()]);
-            return back()->with('flash', [
-                'message' => 'Erro na validação dos dados: ' . $e->getMessage(),
-                'type' => 'error',
-            ]);
-        }
+             Log::info('Dados validados com sucesso.', ['validated_data' => $validated]);
+         } catch (\Throwable $e) {
+             Log::error('Erro na validação dos dados.', ['error' => $e->getMessage()]);
+             return back()->with('flash', [
+                 'message' => 'Erro na validação dos dados: ' . $e->getMessage(),
+                 'type' => 'error',
+             ]);
+         }
 
-        // Manipulação da imagem, se presente
-        $imagePath = $this->handleImageUpload($request);
+         // Verifica se a imagem já está registrada (caso tenha sido informada uma imagem)
+         $imagePath = null; // Inicializa a variável
 
-        if ($imagePath === false) {
-            return back()->with('flash', [
-                'message' => 'Erro ao salvar a imagem.',
-                'type' => 'error',
-            ]);
-        }
+         if ($request->hasFile('image')) {
+             // Se houver um arquivo de imagem, processa a imagem
+             $imageName = $request->file('image')->getClientOriginalName();
 
-        // Criação do produto
-        try {
-            $product = Product::create([
-                'name' => $validated['name'],
-                'category_id' => $validated['category_id'],
-                'price' => $validated['price'],
-                'cost_price' => $validated['cost_price'],
-                'barcode' => $validated['barcode'],
-                'stock_quantity' => $validated['stock_quantity'],
-                'image_path' => $imagePath,
-                'empresa_id' => $empresaId,
-            ]);
+             // Extrai o nome do arquivo sem o diretório, no PHP
+             $imageNameOnly = pathinfo($imageName, PATHINFO_BASENAME);
 
-            Log::info('Produto criado com sucesso.', ['product_id' => $product->id]);
-        } catch (\Throwable $e) {
-            Log::error('Erro ao criar o produto.', ['error' => $e->getMessage()]);
-            return redirect()->route('home')->with('flash', [
-                'message' => 'Erro ao criar o produto: ' . $e->getMessage(),
-                'type' => 'error',
-            ]);
-        }
+             // Verifica se a imagem já existe no banco
+             $existingImage = ProductImage::where('image_url', 'like', '%'.$imageNameOnly)->first();
 
-        // Resposta de sucesso
-        Log::info('Produto cadastrado com sucesso.', ['product' => $product]);
+             if ($existingImage) {
+                 // Se a imagem já existe, reutiliza o caminho existente
+                 $imagePath = $existingImage->image_url;
+                 Log::info('Imagem já existe, reutilizando: ' . $imagePath);
+             } else {
+                 // Se a imagem não existe, faz o upload
+                 $imagePath = $this->handleImageUpload($request);
+                 if ($imagePath === false) {
+                     return back()->with('flash', [
+                         'message' => 'Erro ao salvar a imagem.',
+                         'type' => 'error',
+                     ]);
+                 }
+             }
+         }
 
-        return back()->with('flash', [
-            'message' => 'Processo para ' . $validated['name'] . ' concluído com sucesso!',
-            'type' => 'success',
-        ]);
-    }
+         // Criação do produto
+         try {
+             $product = Product::create([
+                 'name' => $validated['name'],
+                 'category_id' => $validated['category_id'],
+                 'price' => $validated['price'],
+                 'cost_price' => $validated['cost_price'],
+                 'barcode' => $validated['barcode'],
+                 'stock_quantity' => $validated['stock_quantity'],
+                 'min_stock' => $validated['min_stock'],
+                 'image_path' => $imagePath,
+                 'empresa_id' => $empresaId,
+             ]);
 
+             Log::info('Produto criado com sucesso.', ['product_id' => $product->id]);
 
+             // Registrar a imagem na tabela product_images (caso haja uma imagem)
+             if ($imagePath) {
+                 ProductImage::create([
+                     'product_name' => $validated['name'],
+                     'image_url' => $imagePath, // A URL da imagem ou caminho do arquivo
+                 ]);
 
-    /**
-     * Manipula o upload da imagem.
-     *
-     * @param Request $request
-     * @return string|false
-     */
-    private function handleImageUpload(Request $request)
-    {
-        if ($request->hasFile('image')) {
-            try {
-                // Realiza o upload da imagem
-                $imagePath = $request->file('image')->store('images', 'public');
+                 Log::info('Imagem registrada na tabela product_images.', ['product_id' => $product->id, 'image_url' => $imagePath]);
+             }
+         } catch (\Throwable $e) {
+             Log::error('Erro ao criar o produto.', ['error' => $e->getMessage()]);
+             return redirect()->route('home')->with('flash', [
+                 'message' => 'Erro ao criar o produto: ' . $e->getMessage(),
+                 'type' => 'error',
+             ]);
+         }
 
-                // Log de sucesso, mas sem retorno de mensagem para o usuário
-                Log::info('Imagem salva com sucesso.', ['image_path' => $imagePath]);
+         // Resposta de sucesso
+         Log::info('Produto cadastrado com sucesso.', ['product' => $product]);
 
-                // Apenas retorna o caminho da imagem sem mensagem de sucesso explícita
-                return $imagePath;
-            } catch (\Throwable $e) {
-                // Log de erro caso ocorra uma exceção
-                Log::error('Erro ao salvar a imagem.', ['error' => $e->getMessage()]);
-
-                // Retorna a mensagem de erro
-                return response()->json([
-                    'message' => 'Erro ao salvar a imagem.',
-                    'error' => $e->getMessage()
-                ], 500);
-            }
-        }
-
-        // Caso não haja arquivo enviado, não fazer nada ou retornar um erro genérico
-        return null;
-    }
-
-
-
-
+         return back()->with('flash', [
+             'message' => 'Processo para ' . $validated['name'] . ' concluído com sucesso!',
+             'type' => 'success',
+         ]);
+     }
 
     /**
      * Display the specified resource.
@@ -207,88 +204,103 @@ class ProductController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $user = Auth::user(); // Pega o usuário autenticado
-        $empresaId = $user->empresa_id; // Acessa o empresa_id do usuário autenticado
+        Log::info('Início do método update.');
+
+        // Verifica autenticação do usuário
+        if (!Auth::check()) {
+            Log::warning('Usuário não autenticado tentou acessar o método update.');
+            return back()->with('flash', [
+                'message' => 'Usuário não autenticado.',
+                'type' => 'error', // Tipo de mensagem de erro
+            ]);
+        }
+
+        $user = Auth::user();
+        $empresaId = $user->empresa_id;
+
+        Log::info('Usuário autenticado.', ['user_id' => $user->id, 'empresa_id' => $empresaId]);
+
+        // Encontre o produto existente
+        $product = Product::find($id);
+
+        if (!$product) {
+            Log::warning('Produto não encontrado.', ['product_id' => $id]);
+            return back()->with('flash', [
+                'message' => 'Produto não encontrado.',
+                'type' => 'error',
+            ]);
+        }
+
+        // Verificar se o produto pertence à empresa do usuário
+        if ($product->empresa_id !== $empresaId) {
+            Log::warning('Tentativa de atualização de produto de outra empresa.', ['product_id' => $id]);
+            return back()->with('flash', [
+                'message' => 'Produto não pertence à sua empresa.',
+                'type' => 'error',
+            ]);
+        }
 
         // Validação dos dados recebidos
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'sku' => 'required|string|max:255|unique:products,sku,' . $id,
-            'price' => 'required|numeric',
-            'cost_price' => 'nullable|numeric',
-            'stock_quantity' => 'required|integer',
-            'min_stock' => 'nullable|integer',
-            'image_path' => 'nullable|url',
-            'ncm_code' => 'nullable|string|max:255',
-            'supplier_id' => 'required|exists:suppliers,id',
-            'expiration_date' => 'nullable|date',
-            'enable_variations' => 'nullable|boolean',
-            'variations' => 'nullable|array',
-            'variations.*.name' => 'nullable|string|max:255',
-            'variations.*.sku' => 'required|string|max:255',
-            'variations.*.price' => 'nullable|numeric',
-            'variations.*.stock_quantity' => 'required|integer',
-            'variations.*.is_active' => 'required|boolean',
-            'promotion_ids' => 'nullable|array',
-            'promotion_ids.*' => 'exists:promotions,id',
-            'combo_ids' => 'nullable|array',
-            'combo_ids.*' => 'exists:combos,id',
-        ]);
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'category_id' => 'required|exists:categories,id',
+                'price' => 'required|numeric',
+                'cost_price' => 'nullable|numeric',
+                'barcode' => 'nullable|numeric',
+                'stock_quantity' => 'required|integer|min:0',
+                'min_stock' => 'nullable|integer',
+                'image' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:4048',
+            ]);
 
-        // Buscar o produto a ser atualizado
-        $product = Product::findOrFail($id);
-
-        // Atualizar o produto
-        $product->update([
-            'name' => $request->name,
-            'sku' => $request->sku,
-            'barcode' => $request->barcode,
-            'description' => $request->description,
-            'category_id' => $request->category_id,
-            'price' => $request->price,
-            'cost_price' => $request->cost_price,
-            'stock_quantity' => $request->stock_quantity,
-            'min_stock' => $request->min_stock,
-            'is_active' => $request->is_active ?? 1,
-            'is_managed' => $request->is_managed ?? 0,
-            'image_path' => $request->image_path,
-            'ncm_code' => $request->ncm_code,
-            'supplier_id' => $request->supplier_id,
-            'expiration_date' => $request->expiration_date,
-            'empresa_id' => $empresaId, // Usando o empresa_id do usuário autenticado
-        ]);
-
-        // Atualizar promoções associadas ao produto
-        if ($request->has('product_id')) {
-            $product->promotions()->sync($request->promotion_ids);
+            Log::info('Dados validados com sucesso.', ['validated_data' => $validated]);
+        } catch (\Throwable $e) {
+            Log::error('Erro na validação dos dados.', ['error' => $e->getMessage()]);
+            return back()->with('flash', [
+                'message' => 'Erro na validação dos dados: ' . $e->getMessage(),
+                'type' => 'error',
+            ]);
         }
 
-        // Atualizar combos associados ao produto
-        if ($request->has('product_id')) {
-            $product->combos()->sync($request->combo_ids);
+        // Verifica se uma nova imagem foi enviada
+        if ($request->hasFile('image')) {
+            $product->image_path = $this->handleImageUpload($request, 'image');
+        } elseif ($request->input('current_image_path')) {
+            // Mantém o caminho atual se nenhuma nova imagem for enviada
+            $product->image_path = $request->input('current_image_path');
         }
 
-        // Atualizar variações, se ativadas
-        if ($request->enable_variations && $request->has('variations')) {
-            foreach ($request->variations as $variation) {
-                $product->variations()->updateOrCreate(
-                    ['sku' => $variation['sku']], // Identificar a variação pela SKU
-                    [
-                        'name' => $variation['name'],
-                        'price' => $variation['price'],
-                        'stock_quantity' => $variation['stock_quantity'],
-                        'is_active' => $variation['is_active'] ?? true,
-                    ]
-                );
-            }
+        // Atualização do produto
+        try {
+            $product->update([
+                'name' => $validated['name'],
+                'category_id' => $validated['category_id'],
+                'price' => $validated['price'],
+                'cost_price' => $validated['cost_price'],
+                'barcode' => $validated['barcode'],
+                'stock_quantity' => $validated['stock_quantity'],
+                'min_stock' => $validated['min_stock'],
+            ]);
+
+            Log::info('Produto atualizado com sucesso.', ['product_id' => $product->id]);
+        } catch (\Throwable $e) {
+            Log::error('Erro ao atualizar o produto.', ['error' => $e->getMessage()]);
+            return redirect()->route('home')->with('flash', [
+                'message' => 'Erro ao atualizar o produto: ' . $e->getMessage(),
+                'type' => 'error',
+            ]);
         }
 
         // Resposta de sucesso
-        return response()->json([
-            'message' => 'Produto atualizado com sucesso!',
-            'product' => $product,
-        ], 200);
+        Log::info('Produto atualizado com sucesso.', ['product' => $product]);
+
+        return back()->with('flash', [
+            'message' => 'Produto ' . $validated['name'] . ' atualizado com sucesso!',
+            'type' => 'success',
+        ]);
     }
+
+
 
 
 
@@ -324,8 +336,15 @@ class ProductController extends Controller
         // Coletar os nomes dos produtos para a mensagem de feedback
         $productNames = $products->pluck('name')->toArray();
 
-        // Excluir os produtos
-        Product::whereIn('id', $products->pluck('id'))->delete();
+        foreach ($products as $product) {
+            // Verifica se o produto tem uma imagem associada e exclui a imagem
+            if ($product->image_path && Storage::exists($product->image_path)) {
+                Storage::delete($product->image_path);
+            }
+
+            // Excluir o produto
+            $product->delete();
+        }
 
         // Retorna uma mensagem personalizada
         return back()->with('flash', [
@@ -335,6 +354,7 @@ class ProductController extends Controller
             'type' => 'success',
         ]);
     }
+
 
 
 

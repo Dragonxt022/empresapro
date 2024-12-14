@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductImageController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -45,10 +47,15 @@ Route::middleware([
 
         // Rotas dos Produtos
         Route::get('/produtos', [ProductController::class, 'index'])->name('produtos');
-        // adicionar Produtos
-        Route::post('/produtos/adicionar', [ProductController::class, 'store']);
-        // Excluir Produtos
-        Route::post('/produtos/excluir', [ProductController::class, 'destroy']);
+        Route::post('/produtos/adicionar', [ProductController::class, 'store'])->name('produto.adicionar');
+        Route::post('/produto/{id}/update', [ProductController::class, 'update'])->name('produto.update');
+        Route::post('/produtos/excluir', [ProductController::class, 'destroy'])->name('produto.deletar');
+
+        Route::get('/products/images', [ProductImageController::class, 'index']);
+
+
+        // Categoria
+        Route::post('/categoria/adicionar', [CategoryController::class, 'store'])->name('categoria.adicionar');
 
 
 

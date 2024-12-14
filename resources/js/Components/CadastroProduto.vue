@@ -1,19 +1,12 @@
 <template>
     <div>
-      <!-- Botão para abrir a modal -->
-      <button @click="openModal" class="px-4 py-2 bg-blue-500 text-white rounded">
-        <i class="fa-solid fa-plus"></i>
-        Novo Produto
-      </button>
-
       <!-- Modal -->
-      <div v-if="isModalOpen" class="fixed inset-0 z-50 bg-gray-900 bg-opacity-50 flex justify-end">
+      <div v-if="modalStore.activeComponent === 'produto'" class="fixed inset-0 z-50 bg-gray-900 bg-opacity-50 flex justify-end">
         <!-- Modal Content -->
-        <div class="modal-content w-50 sm:w-4/5 md:w-2/3 lg:w-1/2 xl:w-1/3 bg-white p-6 h-full overflow-auto transform transition-all duration-300 ease-in-out"
-          :class="{ 'slide-from-right': isModalOpen, 'slide-to-right': !isModalOpen }">
+        <div class="modal-content w-50 sm:w-4/5 md:w-2/3 lg:w-1/2 xl:w-1/3 bg-white p-6 h-full overflow-auto transform transition-all duration-300 ease-in-out">
 
           <button
-            @click="closeModal"
+            @click="desativarComponentes"
             class="close-button absolute top-4 right-4 text-gray-500"
             >
             <i class="fas fa-times"></i>
@@ -31,13 +24,27 @@
             <div class="space-y-4">
               <div>
                 <label for="name" class="block text-sm font-medium text-gray-700">Nome do Produto</label>
-                <input type="text" id="name" v-model="form.name" required class="mt-1 px-3 py-2 w-full border border-gray-300 rounded" />
+                <input
+                    type="text"
+                    id="name"
+                    v-model="form.name"
+                    @input="onSearchImage"
+                    required
+                    class="mt-1 px-3 py-2 w-full border border-gray-300 rounded"
+                />
+                <!-- <input type="text" id="name" v-model="form.name" required  class="mt-1 px-3 py-2 w-full border border-gray-300 rounded " /> -->
               </div>
 
               <div v-if="props.categories && props.categories.length > 0">
-                <label for="category" class="block text-sm font-medium text-gray-700">
-                Categoria <i class="fa-solid fa-circle-plus" style="color: #0079d6;"></i>
-                </label>
+                <div class="flex justify-content-evenly gap-4 mt-6">
+                    <label for="category" class="text-sm font-medium text-gray-700">Categoria</label>
+                    <button @click.stop="ativarCategoria" style="color: #0079d6; cursor: pointer;">
+                        <i class="fa-solid fa-circle-plus"></i>
+                    </button>
+
+                </div>
+
+
                 <select id="category" v-model="form.category_id" required class="mt-1 px-3 py-2 w-full border border-gray-300 rounded">
                     <option value="">Selecione a Categoria</option>
                     <option v-for="category in props.categories" :key="category.id" :value="category.id">
@@ -64,14 +71,22 @@
 
               </div>
 
-              <div>
-                <label for="stock_quantity" class="block text-sm font-medium text-gray-700">Estoque</label>
-                <input type="number" id="stock_quantity" v-model.number="form.stock_quantity" required class="mt-1 px-3 py-2 w-full border border-gray-300 rounded" />
+              <div class="flex gap-4 mt-6">
+
+                    <div>
+                        <label for="stock_quantity" class="block text-sm font-medium text-gray-700">Estoque</label>
+                        <input type="number" id="stock_quantity" v-model.number="form.stock_quantity" required class="mt-1 px-3 py-2 w-full border border-gray-300 rounded" />
+                    </div>
+
+                    <div>
+                        <label for="min_stock" class="block text-sm font-medium text-gray-700">Estoque Minimo</label>
+                        <input type="number" id="min_stock" v-model.number="form.min_stock" required class="mt-1 px-3 py-2 w-full border border-gray-300 rounded" title="Estoque minimo para que seja avisado!"/>
+                    </div>
               </div>
               <div class="flex gap-4 mt-6">
                 <button
                     type="button"
-                    @click="closeModal"
+                    @click="desativarComponentes"
                     class="w-1/2 px-4 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-100"
                     :disabled="isSubmitting"
                 >
@@ -94,16 +109,15 @@
 
                     <!-- Área para upload da imagem ou preview -->
                     <div
-                        class="flex  flex-col items-center justify-center w-full h-64 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 hover:border-gray-400 transition cursor-pointer"
+                        class="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 hover:border-gray-400 transition cursor-pointer"
                         @click="triggerImageUpload"
-
                         >
                         <!-- Se houver preview da imagem, exibe a imagem clicável -->
                         <template v-if="imagePreview">
                             <img
-                                :src="imagePreview"
-                                alt="Preview da Imagem"
-                                class="object-contain w-[90%] h-[90%] rounded-md transition-transform duration-300 ease-in-out hover:scale-105"
+                            :src="imagePreview"
+                            alt="Preview da Imagem"
+                            class="object-contain w-[90%] h-[90%] rounded-md transition-transform duration-300 ease-in-out hover:scale-105"
                             />
                         </template>
 
@@ -120,14 +134,41 @@
                 </div>
 
                 <!-- Informações adicionais -->
-                <div class="mt-4 text-sm text-gray-600">
+                <div v-if="suggestedImages.length > 0" class="mt-4">
                     <p class="font-semibold text-purple-600">Sugestões de foto</p>
-                    <span>Nada no momento...</span>
+
+                    <!-- Animação de entrada das imagens com 3 segundos de duração -->
+                    <transition-group
+                        name="fade"
+                        tag="div"
+                        class="grid grid-cols-3 gap-4"
+                        :duration="2000"
+                    >
+                        <div
+                            v-for="(image, index) in suggestedImages"
+                            :key="index"
+                            class="cursor-pointer p-2"
+                            @click="setImage(image.link)"
+                        >
+                            <img
+                                :src="image.link"
+                                :alt="image.title"
+                                class="w-full h-24 object-cover rounded-md"
+                            />
+                        </div>
+                    </transition-group>
+                </div>
+
+                <!-- Caso não haja imagens sugeridas -->
+                <div v-else class="mt-4 text-gray-500">
+                    <p class="font-semibold text-purple-600">Sugestões de foto</p>
+
+                    <p class="mt-3">Nada no momento...</p>
                 </div>
 
                 <div>
                     <label for="barcode" class="block text-sm font-medium text-gray-700">Código de Barras (EAN)</label>
-                    <input type="text" id="barcode" v-model="form.barcode" required class="mt-1 px-3 py-2 w-full border border-gray-300 rounded" />
+                    <input type="text" id="barcode" v-model="form.barcode" class="mt-1 px-3 py-2 w-full border border-gray-300 rounded" />
                 </div>
             </div>
 
@@ -140,26 +181,37 @@
         </div>
       </div>
     </div>
+    <!-- Modal de Cadastro de Categoria -->
 </template>
 
 <script setup>
     import { ref } from 'vue';
-    import { Inertia } from '@inertiajs/inertia';
+    import { router } from '@inertiajs/vue3';
     import InputNumber from './InputNumber.vue';
+    import { notify } from '@/Plugins/notify';
+    import { useModalStore } from '@/store/store';  // Importando a store
+    import _debounce from 'lodash.debounce';
+
+
+    const modalStore = useModalStore();
 
     const isSubmitting = ref(false);
     const isModalOpen = ref(false);
     const imageInput = ref(null);
     const imagePreview = ref(null);
 
+    const suggestedImages = ref([]);
+
     const form = ref({
         name: '',
+        image: null,
         category_id: '',
         price: null,
         cost_price: null,
         barcode: '',
         stock_quantity: 0,
-        image: null,
+        min_stock: 5,
+
     });
 
     const props = defineProps({
@@ -169,13 +221,17 @@
         },
     });
 
-    // Abre a modal
-    const openModal = () => {
-        isModalOpen.value = true;
-    };
+    const apiKey = 'AIzaSyBQcLZJqbHPUq9XM6bjOpopQ5fJaMkmq1U'; // Substitua com sua chave da API
+    const cx = 'a7c7f9a8761d54e79'; // Substitua com seu ID do mecanismo de pesquisa
 
-    // Fecha a modal
-    const closeModal = () => {
+    const ativarCategoria = () => {
+         desativarComponentes()
+         modalStore.activateComponent('categoria');
+
+        }
+
+    // Abre a modal
+    const desativarComponentes = () => {
         isModalOpen.value = false;
         form.value = {
             name: '',
@@ -184,34 +240,147 @@
             cost_price: null,
             barcode: '',
             stock_quantity: 0,
+            min_stock: 5,
             image: null,
         };
         imagePreview.value = null; // Reseta o preview ao fechar a modal
+        modalStore.deactivateComponent();
     };
 
-    const triggerImageUpload = () => {
-        if (imageInput.value) {
-            imageInput.value.click(); // Simula o clique no input de arquivo
-        }
-    };
+    const lastSearch = ref('');
+    const lastImages = ref([]);
+    const apiLimitReached = ref(false); // Flag que controla o estado de limite atingido
 
-    // Função para lidar com a imagem do produto
-    const handleImageChange = (event) => {
-        const file = event.target.files[0];
-        if (!file) return;
+    const dailyQueryCount = ref(0); // Contador de consultas
+    const dailyQueryLimit = 100; // Limite diário (igual ao fornecido pela API)
 
-        const validFormats = ['image/jpeg', 'image/png'];
-        if (!validFormats.includes(file.type)) {
-            alert('Formato inválido! Apenas arquivos JPEG e PNG são permitidos.');
+    // Variáveis para controle de qual API utilizar
+    const useInternalApi = ref(true); // Controle para usar a API interna (true) ou a API do Google (false)
+    const useGoogleApi = ref(false);   // Controle para usar a API do Google
+
+    const onSearchImage = _debounce(async () => {
+        const searchQuery = form.value.name.trim();
+
+        // Validações iniciais para evitar requisições desnecessárias
+        if (searchQuery.length < 4 || searchQuery === lastSearch.value) {
+            suggestedImages.value = lastImages.value; // Mostra as últimas imagens válidas
             return;
         }
 
-        form.value.image = file;
-        const reader = new FileReader();
-        reader.onload = () => {
-            imagePreview.value = reader.result; // Atualiza o preview da imagem
-        };
-        reader.readAsDataURL(file);
+        try {
+            if (useInternalApi.value) {
+                // Tenta buscar na API interna
+                const response = await axios.get('/products/images', {
+                    params: { term: searchQuery }
+                });
+
+                if (response.data.length > 0) {
+                    // Se encontrar resultados na sua API interna
+                    suggestedImages.value = response.data;
+                    lastSearch.value = searchQuery;
+                    lastImages.value = response.data; // Atualiza as últimas imagens válidas
+                    return;
+                }
+            }
+
+            // Caso a API interna não encontre resultados ou se queremos usar a API do Google
+            if (useGoogleApi.value && dailyQueryCount.value < dailyQueryLimit) {
+                // Realiza a busca na API do Google
+                const googleResponse = await axios.get('https://www.googleapis.com/customsearch/v1', {
+                    params: {
+                        key: apiKey,
+                        cx: cx,
+                        searchType: 'image',
+                        q: searchQuery,
+                        num: 10, // Retorna até 10 imagens
+                    },
+                });
+
+                // Incrementa o contador local apenas em buscas bem-sucedidas
+                dailyQueryCount.value++;
+
+                // Filtra os resultados para incluir apenas imagens válidas
+                const validFormats = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+                const filteredImages = (googleResponse.data.items || []).filter(item => {
+                    return validFormats.includes(item.mime);
+                });
+
+                suggestedImages.value = filteredImages;
+                lastSearch.value = searchQuery;
+                lastImages.value = filteredImages; // Atualiza as últimas imagens válidas
+            } else if (dailyQueryCount.value >= dailyQueryLimit) {
+                apiLimitReached.value = true;
+                // notify.error('Limite de consultas atingido para a busca de imagens do Google.');
+            }
+
+        } catch (error) {
+            console.error('Erro na busca de imagens:', error);
+            // notify.error('Erro ao buscar imagens.');
+        }
+    }, 2000); // Aguarda 3 segundos antes de executar novamente
+
+    function resetDailyQueryCount() {
+        dailyQueryCount.value = 0;
+        apiLimitReached.value = false; // Permite novas buscas
+    }
+
+    // Agende a reinicialização para o início do próximo dia
+    setTimeout(resetDailyQueryCount, 24 * 60 * 60 * 1000); // 24 horas em milissegundos
+
+    const setImage = async (imageUrl) => {
+        try {
+            // Realiza o download da imagem
+            const response = await fetch(imageUrl);
+            const blob = await response.blob();
+
+            // Extraí o nome da imagem da URL (por exemplo, 'image.jpg' de 'http://empresapro.test/storage/images/image.jpg')
+            const imageName = imageUrl.split('/').pop();
+
+            // Cria um objeto File a partir do blob, mantendo o nome original da imagem
+            const file = new File([blob], imageName, { type: blob.type });
+
+            // Atualiza o preview da imagem
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                imagePreview.value = reader.result;
+            };
+            reader.readAsDataURL(file);
+
+            // Atribui a imagem ao campo do formulário (para envio)
+            form.value.image = file;
+
+        } catch (error) {
+            console.error('Erro ao baixar a imagem:', error);
+            notify.error('Erro ao baixar a imagem. Tente novamente.');
+        }
+    };
+
+
+
+    // Função para abrir o seletor de imagens
+    const triggerImageUpload = () => {
+    if (imageInput.value) {
+        imageInput.value.click(); // Simula o clique no input de arquivo
+    }
+    };
+
+    // Função para lidar com o upload da imagem
+    const handleImageChange = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const validFormats = ['image/jpeg', 'image/png'];
+    if (!validFormats.includes(file.type)) {
+        alert('Formato inválido! Apenas arquivos JPEG e PNG são permitidos.');
+        return;
+    }
+
+    form.value.image = file;
+    const reader = new FileReader();
+    reader.onload = () => {
+        imagePreview.value = reader.result; // Atualiza o preview da imagem
+    };
+    reader.readAsDataURL(file);
     };
 
     const submitForm = async () => {
@@ -226,28 +395,44 @@
         formData.append('cost_price', (form.value.cost_price / 100).toFixed(2));
         formData.append('barcode', form.value.barcode);
         formData.append('stock_quantity', form.value.stock_quantity);
+        formData.append('min_stock', form.value.min_stock);
+
         if (form.value.image) {
             formData.append('image', form.value.image);
         }
 
-        // Envia os dados para a API usando Inertia.js
-        Inertia.post('/produtos/adicionar', formData, {
-            preserveState: true,
-            preserveScroll: true,
+        // Envia os dados para a API usando router.visit
+        router.visit(route('produto.adicionar'), {
+            method: 'post', // Define o método como POST
+            data: formData, // Dados do formulário
+            preserveState: true, // Preserva o estado atual
+            preserveScroll: true, // Mantém a posição do scroll
             onSuccess: () => {
-                closeModal(); // Fecha a modal em caso de sucesso
+                desativarComponentes(); // Fecha a modal em caso de sucesso
                 isSubmitting.value = false; // Reabilita o botão
+                notify.success('Produto cadastrado com sucesso!');
             },
             onError: (errors) => {
-                console.error(errors);
+                console.error(errors); // Exibe os erros no console
                 isSubmitting.value = false; // Reabilita o botão para novas tentativas
+                notify.error('Erro ao cadastrar o produto.' + errors);
+
             },
         });
     };
+
 </script>
 
 
 <style scoped>
+    /* Animação de fade */
+    .fade-enter-active, .fade-leave-active {
+    transition: opacity 3s ease;
+    }
+
+    .fade-enter, .fade-leave-to /* .fade-leave-active em <2.1.8 */ {
+    opacity: 0;
+    }
     .close-button {
     transition: all 0.2s ease-in-out;
     border-radius: 50%; /* Deixa o botão arredondado */
@@ -286,7 +471,8 @@
         transform: rotate(360deg);
     }
     }
-  /* Animação de deslizar da direita para a entrada */
+
+    /* Animação de deslizar da direita para a entrada */
   @keyframes slideFromRight {
     0% {
       transform: translateX(100%);
@@ -307,12 +493,8 @@
   }
 
   /* Estilos de transição */
-  .slide-from-right {
-    animation: slideFromRight 0.3s ease-out;
-  }
-
   .slide-to-right {
-    animation: slideToRight 0.3s ease-in;
+    animation: slideFromRight 0.2s ease-out;
   }
 
   .fixed {
@@ -322,4 +504,21 @@
   .bg-gray-900 {
     background-color: rgba(0, 0, 0, 0.5); /* Fundo semitransparente */
   }
+
+   /* Efeito fade-in nas imagens de sugestões */
+   .fade-enter-active, .fade-leave-active {
+        transition: opacity 0.5s ease-in-out;
+    }
+    .fade-enter, .fade-leave-to /* .fade-leave-active em versões anteriores do Vue */ {
+        opacity: 0;
+    }
+
+    /* Alternativa de animação com "slide" */
+    .fade-enter-active {
+        transition: transform 0.5s ease, opacity 0.5s ease;
+    }
+    .fade-enter {
+        transform: translateY(20px);
+        opacity: 0;
+    }
   </style>

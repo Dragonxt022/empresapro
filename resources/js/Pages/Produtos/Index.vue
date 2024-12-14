@@ -6,9 +6,21 @@ import Paginetion from '@/Components/Paginetion.vue';
 import ConfirmModal from '@/Components/ConfirmModal.vue';
 import DropdownMenu from '@/Components/DropdownMenu.vue';
 import CadastroProduto from '@/Components/CadastroProduto.vue';
-import GlobalNotification from '@/Components/GlobalNotification.vue';
 import EditarProduto from '@/Components/EditarProduto.vue';
 import CadastroCategoria from '@/Components/CadastroCategoria.vue';
+import { notify } from '@/Plugins/notify';
+import { router } from '@inertiajs/vue3';
+import IconeAlerta from '@/Components/IconeAlerta.vue';
+import { useModalStore } from '@/store/store';
+
+
+// Referência da store
+const modalStore = useModalStore();
+
+// Funções para ativar/desativar componentes
+const ativarProduto = () => modalStore.activateComponent('produto');
+const ativarCategoria = () => modalStore.activateComponent('categoria');
+const desativarComponentes = () => modalStore.deactivateComponent();
 
 // Recebendo os props do Laravel
 const props = defineProps({
@@ -24,17 +36,10 @@ const props = defineProps({
         type: Object,
         required: true,
     },
-    jetstream: {
-        type: Object,
-        required: true,
-    },
 });
 
 
-
 const tab = ref('produtos');
-
-const flash = ref(props.jetstream.flash || {});
 
 const paginaAtual = ref(props.products.meta.current_page);
 const links = ref(props.products.meta.links); // Links da paginação
@@ -46,17 +51,14 @@ const selectedCategory = ref(props.filters.category || '');
 const selectedProducts = ref([]);
 // Estados da modal
 const isModalOpen = ref(false);
-
 const isModalOpenEdit = ref(false);
-
 const modalMessage = ref('');
 const isWarning = ref(false);
-
-
 const produtoSelecionado = ref(null);
 
+
 const editarProduto = (produto) => {
-    produtoSelecionado.value = produto; // Defina o produto selecionado
+    produtoSelecionado.value = produto;
     isModalOpenEdit.value = true;
 }
 
@@ -68,17 +70,26 @@ const fecharModal = () => {
 
 const navegarPagina = async (url) => {
     if (url) {
-        Inertia.get(url, {}, { preserveState: true, preserveScroll: true }); // Evitar recarregamento
+        router.visit(url, {
+            method: 'get', // Define que é uma requisição GET
+            preserveState: false, // Mantém o estado atual (ex.: valores de formulários)
+            preserveScroll: true, // Mantém a posição do scroll
+        });
     }
-};
+}
 
 // Atualizar URL ao aplicar filtros ou paginação
 const atualizarUrl = async () => {
-    Inertia.get('/produtos', {
-        search: searchTerm.value,
-        category: selectedCategory.value,
-        page: paginaAtual.value,
-    }, { preserveState: true });
+    router.visit(route('produtos'), {
+        method: 'get', // Define o método GET
+        data: {
+            search: searchTerm.value,
+            category: selectedCategory.value,
+            page: paginaAtual.value,
+        },
+        preserveState: true, // Mantém o estado atual (ex.: formulários)
+        preserveScroll: true, // Mantém a posição do scroll
+    });
 };
 
 // Assista mudanças nos filtros
@@ -108,7 +119,7 @@ const selecionarProduto = (productId) => {
 
 const excluirProdutos = () => {
     if (selectedProducts.value.length === 0) {
-        modalMessage.value = 'Você precisa selecionar ao menos um produto para excluir.';
+        modalMessage.value = `Você precisa selecionar pelomenos 1 item se deseja excluir?`;
         isWarning.value = true;
         isModalOpen.value = true;
         return;
@@ -130,14 +141,19 @@ const confirmarExclusao = async () => {
                     product => !selectedProducts.value.includes(product.id)
                 );
                 selectedProducts.value = [];
+                notify.success('Item(s) Excluitdo(s)')
             },
+            onError: () => {
+                notify.error('Erro tente novamente.');
+
+            },
+
         });
     }
     isModalOpen.value = false;
 };
 
 </script>
-
 
 <style>
     .img-50x50 {
@@ -158,13 +174,39 @@ const confirmarExclusao = async () => {
         border-radius: 3px; /* Bordas arredondadas */
         transition: box-shadow 0.3s ease-in-out; /* Transição suave */
     }
+    @keyframes slideFromRight {
+        0% {
+        transform: translateX(100%);
+        }
+        100% {
+        transform: translateX(0);
+        }
+    }
+
+    /* Animação de deslizar da direita para a saída */
+    @keyframes slideToRight {
+        0% {
+        transform: translateX(0);
+        }
+        100% {
+        transform: translateX(100%);
+        }
+    }
+
+    .slide-fade-enter-active, .slide-fade-leave-active {
+        animation: slideToRight 0.3s ease-in;
+    }
+
+    .slide-fade-enter, .slide-fade-leave-to {
+    opacity: 0;
+    }
+
 </style>
 
 <template>
 
 
     <AppLayout title="Produtos">
-        <GlobalNotification :flash="flash" />
         <div class="content-wrapper">
 
             <section class="content-header py-4">
@@ -204,17 +246,31 @@ const confirmarExclusao = async () => {
                             </button>
                         </div>
 
-
                         <div class="flex gap-2">
+                            <button
+                                @click="ativarCategoria"
+                                class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-300 hidden md:inline-block">
+                                <i class="fa-solid fa-plus"></i>
+                                Nova categoria
+                            </button>
 
-                            <!-- Botão "Nova categoria" apenas visível em telas grandes -->
-                            <CadastroCategoria />
+                            <button
+                                @click="ativarProduto"
+                                class="px-4 py-2 bg-blue-500 text-white rounded">
+                                <i class="fa-solid fa-plus"></i>
+                                Novo Produto
+                            </button>
 
-                            <!-- Botão "Novo produto" responsivo -->
-                            <CadastroProduto
-                                :categories="categories"
+                            <transition name="slide">
+                                <CadastroCategoria v-if="modalStore.activeComponent === 'categoria'"  />
+                            </transition>
 
-                            />
+                            <transition name="slide">
+                                <CadastroProduto v-if="modalStore.activeComponent === 'produto'" :categories="categories"/>
+                            </transition>
+
+
+
                         </div>
                     </div>
 
@@ -262,7 +318,11 @@ const confirmarExclusao = async () => {
                                 <thead class="bg-gray-100 border-b">
                                     <tr>
                                         <th class="px-4 py-3">
-                                            <input type="checkbox" @change="selecionarTodos($event.target.checked)" />
+                                            <input
+                                                type="checkbox"
+                                                @change="selecionarTodos($event.target.checked)"
+                                                class="cursor-pointer"
+                                                />
                                         </th>
                                         <th class="px-4 py-2">PRODUTO</th>
                                         <th class="px-4 py-2 text-center hidden sm:table-cell">COD</th>
@@ -274,9 +334,14 @@ const confirmarExclusao = async () => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="product in props.products.data" :key="product.id" class="border-b" @click="editarProduto(product)">
-                                        <td class="px-4 py-2" @click.stop >
-                                            <input type="checkbox" :checked="selectedProducts.includes(product.id)" @change="selecionarProduto(product.id)" />
+                                    <tr v-for="product in props.products.data" :key="product.id" class="border-b" @click="editarProduto(product)" style="cursor: pointer;">
+                                        <td class="px-4 py-2 relative cursor-pointer" @click="selecionarProduto(product.id)" @click.stop >
+                                            <input
+                                                type="checkbox"
+                                                :checked="selectedProducts.includes(product.id)"
+                                                @change="selecionarProduto(product.id)"
+                                                class="cursor-pointer"
+                                            />
                                         </td>
                                         <td class="px-4 py-2 flex items-center gap-2">
                                             <img :src="'/storage/' + (product.image_path ||  'default-product-image.jpg')" alt="Produto" class="img-circle img-50x50">
@@ -289,7 +354,12 @@ const confirmarExclusao = async () => {
                                         </td>
 
                                         <td class="px-3 py-2 text-center hidden md:table-cell">{{ product.category }}</td>
-                                        <td class="px-4 py-2 text-center hidden lg:table-cell">{{ product.stock_quantity}}</td>
+                                        <td class="px-4 py-2 text-center hidden lg:table-cell">
+                                            {{ product.stock_quantity }}
+                                            <!-- Componente do ícone de alerta -->
+                                            <IconeAlerta :estoque="product.stock_quantity" :limiteMinimo="product.min_stock" />
+                                        </td>
+                                        <!-- <td class="px-4 py-2 text-center hidden lg:table-cell">{{ product.stock_quantity}}</td> -->
                                         <td class="px-4 py-2 text-center hidden xl:table-cell">R$ {{ product.cost_price }}</td>
                                         <td class="px-4 py-2 text-center hidden xl:table-cell">R$ {{ product.price }}</td>
                                         <td class="px-4 py-2 flex items-center gap-2" @click.stop >

@@ -29,12 +29,6 @@ class Product extends Model
         'expiration_date',
     ];
 
-    // Método booted() para aplicar o escopo global
-    public function getImagePathAttribute($value)
-    {
-        return $value ? $value : 'default-product-image.jpg';
-    }
-
     public function empresa()
     {
         return $this->belongsTo(Empresa::class);

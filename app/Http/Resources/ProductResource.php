@@ -26,9 +26,6 @@ class ProductResource extends JsonResource
             'price' => number_format($this->price ?? 0, 2, ',', '.'),  // Se o preço for nulo, define como 0
             'cost_price' => number_format($this->cost_price ?? 0, 2, ',', '.'),  // Se o preço de custo for nulo, define como 0
 
-            // 'price_nao_formatada' =>$this->price ?? 0,
-            // 'cost_price_nao_formatada' =>$this->cost_price ?? 0,
-
             'stock_quantity' => $this->stock_quantity ?? 0,  // Caso a quantidade de estoque seja nula, define como 0
             'min_stock' => $this->min_stock ?? 0,  // Caso o mínimo de estoque seja nulo, define como 0
             'is_active' => $this->is_active ?? false,  // Caso o status ativo seja nulo, define como false
