@@ -21,7 +21,7 @@ class CategoryController extends Controller
         // Valida os dados recebidos
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'image' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5048',
         ]);
 
         // Inicializa a variável para o caminho da imagem

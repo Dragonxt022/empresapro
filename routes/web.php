@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CaixaBaocao;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ProductController;
@@ -44,6 +45,10 @@ Route::middleware([
             return inertia::render('Tabela/Index');
         })->name('tabela');
 
+        //  Caixa
+        Route::get('/balcao', [CaixaBaocao::class, 'index'])->name('balcao');
+        // ajax
+        Route::get('/api/products', [CaixaBaocao::class, 'fetchProducts'])->name('products.fetch');
 
         // Rotas dos Produtos
         Route::get('/produtos', [ProductController::class, 'index'])->name('produtos');

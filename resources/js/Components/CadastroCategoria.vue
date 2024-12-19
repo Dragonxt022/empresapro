@@ -163,7 +163,7 @@
 
     // Variáveis para controle de qual API utilizar
     const useInternalApi = ref(true); // Controle para usar a API interna (true) ou a API do Google (false)
-    const useGoogleApi = ref(false);   // Controle para usar a API do Google
+    const useGoogleApi = ref(true);   // Controle para usar a API do Google
 
     const onSearchImage = _debounce(async () => {
         const searchQuery = form.value.name.trim();
@@ -325,7 +325,7 @@
         const file = event.target.files[0];
         if (!file) return;
 
-        const validFormats = ['image/jpeg', 'image/png'];
+        const validFormats = ['image/jpeg', 'image/png', 'image/webp'];
         if (!validFormats.includes(file.type)) {
             alert('Formato inválido! Apenas arquivos JPEG e PNG são permitidos.');
             return;

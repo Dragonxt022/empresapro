@@ -26,7 +26,7 @@ class ProductSeeder extends Seeder
                 'cost_price' => $faker->randomFloat(2, 1, 200), // Preço de custo entre 1 e 200
                 'stock_quantity' => $faker->numberBetween(0, 100), // Quantidade em estoque
                 'min_stock' => $faker->numberBetween(0, 50), // Estoque mínimo
-                'empresa_id' => 3, // Exemplo de empresa_id fixo
+                'empresa_id' => 1, // Exemplo de empresa_id fixo
                 'is_active' => $faker->boolean, // Ativo ou inativo
                 'is_managed' => $faker->boolean, // Gerenciado ou não
                 'image_path' => null, // Caminho da imagem (pode ser personalizado)

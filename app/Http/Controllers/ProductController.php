@@ -104,7 +104,7 @@ class ProductController extends Controller
                  'barcode' => 'nullable|numeric',
                  'stock_quantity' => 'required|integer|min:0',
                  'min_stock' => 'nullable|integer',
-                 'image' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
+                 'image' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5048',
              ]);
 
              Log::info('Dados validados com sucesso.', ['validated_data' => $validated]);
