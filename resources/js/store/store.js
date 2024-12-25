@@ -3,17 +3,32 @@ import { defineStore } from 'pinia';
 
 export const useModalStore = defineStore('modal', {
   state: () => ({
-    // Estado para controlar qual componente está ativo
-    activeComponent: null, // Nenhum componente ativo inicialmente
+    activeComponent: null, // Componente ativo
+    selectedPaymentMethod: null, // Método de pagamento selecionado
+    isSalesPanelVisible: false, // Exibir ou ocultar o painel de vendas
+    salesPanelData: null, // Dados da mesa e do painel de vendas
   }),
   actions: {
-    // Função para ativar o componente
+    // Ativar componente
     activateComponent(componentName) {
-      this.activeComponent = componentName;  // Ativa o componente
+      this.activeComponent = componentName;
     },
-    // Função para desativar o componente
+    // Desativar componente
     deactivateComponent() {
-      this.activeComponent = null;  // Desativa todos os componentes
+      this.activeComponent = null;
+      this.selectedPaymentMethod = null;
+      this.isSalesPanelVisible = false;
+      this.salesPanelData = null;
+    },
+    // Ativar painel de vendas
+    openSalesPanel(data) {
+      this.isSalesPanelVisible = true;
+      this.salesPanelData = data;
+    },
+    // Fechar painel de vendas
+    closeSalesPanel() {
+      this.isSalesPanelVisible = false;
+      this.salesPanelData = null;
     },
   },
 });

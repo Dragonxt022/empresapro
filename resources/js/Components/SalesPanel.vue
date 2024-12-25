@@ -1,5 +1,5 @@
 <template>
-  <AppLayout title="Caixa">
+  <div class="modal-wrapper" v-if="isVisible">
     <div class="content-wrapper">
       <section>
         <div class="grid grid-cols-1 lg:grid-cols-[450px_auto] gap-1 p-1">
@@ -9,7 +9,12 @@
               <div class="w-9 h-9 flex items-center justify-center">
                 <i class="fa-solid fa-cart-shopping"></i>
               </div>
-              <h4 class="text-xl font-bold">{{ mesa.nome }}</h4>
+              <h4 class="text-xl font-bold">
+                {{ mesaId ? 'Mesa ' + mesaId : 'Selecione uma mesa' }}
+              </h4>
+              <button @click="closePanel" class="btn btn-red mt-4">
+                Fechar
+              </button>
             </div>
             <div class="h-96 overflow-y-scroll mt-3 flex-grow">
               <div class="flex flex-col space-y-2">
@@ -136,16 +141,21 @@
         </div>
       </section>
     </div>
-  </AppLayout>
+  </div>
 </template>
 
 <script setup>
-import AppLayout from '@/Layouts/AppLayout.vue';
 import ProductList from '@/Components/ProductList.vue';
 import { defineProps, ref, computed } from 'vue';
 import DiscountModal from '@/Components/DiscountModal.vue';
 import AddValueModal from '@/Components/AddValueModal.vue';
 import ClearCartModal from '@/Components/ClearCartModal.vue';
+import { useModalStore } from '@/store/store';
+
+const modalStore = useModalStore();
+
+const isVisible = computed(() => modalStore.isSalesPanelVisible);
+// const mesa = computed(() => modalStore.salesPanelData?.mesa);
 
 // Variáveis reativas
 const showDiscountModal = ref(false); // Controle da modal de desconto
@@ -160,11 +170,38 @@ const cartItems = ref([]); // Itens do carrinho
 
 // Props do Laravel
 const props = defineProps({
-  products: { type: Object, required: true },
-  categories: { type: Array, required: true },
-  filters: { type: Object, required: true },
-  mesa: { type: Object, required: true },
+  mesaId: {
+    type: Number,
+    required: false,
+  },
+
+  products: {
+    type: Object,
+    required: true,
+  },
+
+  categories: {
+    type: Array,
+    required: true,
+  },
+
+  filters: {
+    type: Object,
+    required: true,
+  },
 });
+
+const closePanel = () => {
+  resetFields();
+  modalStore.closeSalesPanel();
+};
+
+// Função para resetar os campos
+const resetFields = () => {
+  cartItems.value = []; // Limpar itens do carrinho
+  addedValue.value = 0; // Limpar valor adicionado
+  discountValue.value = 0; // Limpar valor do desconto
+};
 
 // Função para limpar o carrinho
 const clearCart = () => {
@@ -259,5 +296,23 @@ const totalItems = computed(() =>
 </script>
 
 <style scoped>
-/* Adicione estilos personalizados, se necessário */
+.modal-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.content-wrapper {
+  width: 100%;
+  max-width: 100%; /* Largura máxima */
+  max-height: 100%; /* Altura máxima */
+  overflow-y: auto; /* Scroll se necessário */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
 </style>

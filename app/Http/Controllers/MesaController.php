@@ -8,15 +8,20 @@ use App\Models\Mesa;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
-class CaixaBaocao extends Controller
+class MesaController extends Controller
 {
+    /**
+     * Display a listing of the resource.
+     */
     public function index(Request $request)
     {
         $user = Auth::user();
         $empresaId = $user->empresa_id;
+
+        // Busca as mesas da empresa do usuário autenticado
+        $mesas = Mesa::where('empresa_id', $empresaId)->get();
 
         // Definindo a quantidade de itens por página
         $perPage = $request->get('per_page', 30);
@@ -44,40 +49,71 @@ class CaixaBaocao extends Controller
         $products = ProductResource::collection($query->orderBy($sortBy, $sortDirection)->paginate($perPage));
         $categories = Categorie::where('empresa_id', $empresaId)->get();
 
-        return Inertia::render('Caixa/Index', [
+        // Renderiza a página com os dados usando o Inertia
+        return Inertia::render('Mesa/Index', [
+            'mesas' => $mesas,
             'products' => $products, // Lista de produtos
             'categories' => $categories, // Categorias para filtro
             'filters' => $request->only(['search', 'category', 'sort_by', 'sort_direction']),
+
         ]);
     }
 
-
-    public function fetchProducts(Request $request)
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function abrir($id)
     {
-        Log::info('Rota fetchProducts foi chamada');
-        $user = Auth::user();
-        $empresaId = $user->empresa_id;
+        $mesa = Mesa::findOrFail($id);
 
-        $perPage = $request->get('per_page', 30);
-        $sortBy = $request->get('sort_by', 'name');
-        $sortDirection = $request->get('sort_direction', 'desc');
-        $category = $request->get('category', null);
+        // Atualiza o status da mesa
+        $mesa->status = 'aberto';
+        $mesa->save();
 
-        $query = Product::with('category')
-            ->where('empresa_id', $empresaId);
-
-        if ($category) {
-            $query->where('category_id', $category);
-        }
-
-        $products = $query->orderBy($sortBy, $sortDirection)->paginate($perPage);
-
-        Log::info('Produtos retornados:', ['products' => $products]);
-
-        $products->withPath('/api/products');
-
-        return response()->json($products);
+        // Redireciona para a rota 'balcao' com o ID da mesa
+        return redirect()->route('balcao', ['mesa_id' => $mesa->id]);
     }
 
 
+
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        //
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(string $id)
+    {
+        //
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(string $id)
+    {
+        //
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, string $id)
+    {
+        //
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(string $id)
+    {
+        //
+    }
 }

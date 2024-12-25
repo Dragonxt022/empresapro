@@ -14,14 +14,33 @@ class PaymentMethod extends Model
         'type',
         'fee_percentage',
         'bank_account',
+        'empresa_id',
         'is_active',
     ];
 
-    /**
-     * Casts para os tipos de dados.
-     */
     protected $casts = [
         'fee_percentage' => 'float',
         'is_active' => 'boolean',
     ];
+
+    // Mapear os tipos para descrições
+    public static $typeDescriptions = [
+        'D' => 'Dinheiro',
+        'C' => 'Crédito',
+        'T' => 'Débito',
+        'P' => 'Pix',
+    ];
+
+    /**
+     * Obter descrição do tipo.
+     */
+    public function getTypeDescriptionAttribute()
+    {
+        return self::$typeDescriptions[$this->type] ?? 'Desconhecido';
+    }
+
+    public function empresa()
+    {
+        return $this->belongsTo(Empresa::class);
+    }
 }

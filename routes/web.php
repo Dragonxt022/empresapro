@@ -3,6 +3,8 @@
 use App\Http\Controllers\CaixaBaocao;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\MesaController;
+use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductImageController;
 use Illuminate\Foundation\Application;
@@ -45,8 +47,7 @@ Route::middleware([
             return inertia::render('Tabela/Index');
         })->name('tabela');
 
-        //  Caixa
-        Route::get('/balcao', [CaixaBaocao::class, 'index'])->name('balcao');
+
         // ajax
         Route::get('/api/products', [CaixaBaocao::class, 'fetchProducts'])->name('products.fetch');
 
@@ -58,9 +59,22 @@ Route::middleware([
 
         Route::get('/products/images', [ProductImageController::class, 'index']);
 
-
         // Categoria
         Route::post('/categoria/adicionar', [CategoryController::class, 'store'])->name('categoria.adicionar');
+
+        // Fomra pagamentos
+        Route::get('/forma/pagamentos', [PaymentMethodController::class, 'index'])->name('formas_pagamento');
+        Route::post('/pagamentos/adicionar', [PaymentMethodController::class, 'store'])->name('formas_pagamento.adicionar');
+        Route::delete('/pagamentos/{paymentMethod}', [PaymentMethodController::class, 'destroy'])->name('paymentMethod.destroy');
+
+
+        //  Caixa
+        Route::get('/balcao/{mesa_id}', [CaixaBaocao::class, 'index'])->name('balcao');
+
+        //  Messas
+        Route::get('/mesas', [MesaController::class, 'index'])->name('mesas');
+        Route::post('/mesas/{id}/abrir', [MesaController::class, 'abrir'])->name('mesas.abrir');
+
 
 
 

@@ -61,4 +61,9 @@ class Empresa extends Model
     {
         return $this->hasMany(Product::class);
     }
+
+    public function paymentMethods()
+    {
+        return $this->hasMany(PaymentMethod::class);
+    }
 }
