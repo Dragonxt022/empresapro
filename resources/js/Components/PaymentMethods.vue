@@ -106,6 +106,8 @@
 import { ref, computed, onMounted } from 'vue';
 import axios from 'axios';
 
+const emit = defineEmits(['save-payments', 'close']);
+
 const paymentMethods = ref([]); // Métodos disponíveis
 const paymentValues = ref({}); // Valores de pagamento por método
 const formattedPaymentValues = ref({}); // Valores formatados (R$)
@@ -214,10 +216,23 @@ const parseCurrency = (formattedValue) => {
   return Math.round(parseFloat(numericValue) * 100) || 0;
 };
 
-// Emite os dados de pagamento
+// Função para salvar os pagamentos
 const savePayments = () => {
-  $emit('save-payments', {
-    methods: paymentValues.value,
+  // Verificar se paymentValues está correto
+  console.log('paymentValues antes de emitir:', paymentValues.value);
+
+  const methods = Object.keys(paymentValues.value).map((methodName) => ({
+    name: methodName,
+    amount: paymentValues.value[methodName],
+  }));
+
+  if (!Array.isArray(methods)) {
+    console.error('methods não é um array:', methods);
+    return;
+  }
+
+  emit('save-payments', {
+    methods,
     totalPaid: props.subtotal + props.addedValue - props.discountValue,
   });
 };

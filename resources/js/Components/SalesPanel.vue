@@ -184,25 +184,41 @@ const discountValue = ref(0);
 const remainingAmount = ref(0);
 
 const cartItems = ref([]);
-
-// Dados reativos para os métodos de pagamento
-const paymentMethodsSelected = ref({});
+const paymentMethodsSelected = ref([]);
 
 const handlePaymentMethods = (selectedPayments) => {
-  paymentMethodsSelected.value = selectedPayments;
+  console.log('selectedPayments recebido no SalesPanel:', selectedPayments);
 
-  // Calcular o valor total pago pelos métodos selecionados
-  const totalPaid = selectedPayments.reduce(
-    (sum, payment) => sum + payment.amount,
-    0
-  );
+  // Verificar se 'methods' dentro de selectedPayments é um array
+  if (Array.isArray(selectedPayments.methods)) {
+    paymentMethodsSelected.value = selectedPayments.methods;
 
-  // Calcular o valor restante
-  const totalToPay = totalWithDiscountAndAdd.value;
-  remainingAmount.value = totalToPay - totalPaid;
+    // Calcular o valor total pago pelos métodos selecionados
+    const totalPaid = selectedPayments.methods.reduce(
+      (sum, payment) => sum + payment.amount,
+      0
+    );
 
-  if (remainingAmount.value <= 0) {
-    remainingAmount.value = 0;
+    // Calcular o valor restante
+    const totalToPay = totalWithDiscountAndAdd.value;
+    remainingAmount.value = totalToPay - totalPaid;
+
+    if (remainingAmount.value <= 0) {
+      remainingAmount.value = 0;
+    }
+
+    // Log para verificar os valores
+    console.log(
+      'Métodos de pagamento selecionados:',
+      paymentMethodsSelected.value
+    );
+    console.log('Total pago:', totalPaid);
+    console.log('Valor restante:', remainingAmount.value);
+  } else {
+    console.error(
+      'selectedPayments.methods não é um array:',
+      selectedPayments.methods
+    );
   }
 };
 
@@ -323,13 +339,6 @@ const saleDetails = computed(() => ({
   payments: paymentMethodsSelected.value,
   total: totalWithDiscountAndAdd.value,
 }));
-
-// Emitir os dados de pagamento para o componente pai
-const saveSale = () => {
-  console.log('Venda salva:', saleDetails.value);
-  // Emitir para o componente pai ou enviar para o backend
-  $emit('save-sale', saleDetails.value);
-};
 </script>
 
 <style scoped>
