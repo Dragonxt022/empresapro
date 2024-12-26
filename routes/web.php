@@ -7,6 +7,7 @@ use App\Http\Controllers\MesaController;
 use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductImageController;
+use App\Models\PaymentMethod;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -50,6 +51,7 @@ Route::middleware([
 
         // ajax
         Route::get('/api/products', [CaixaBaocao::class, 'fetchProducts'])->name('products.fetch');
+        Route::get ('/api/paymentMethod', [PaymentMethodController::class, 'apiPaymentMethods'])->name('paymentMethod.fetch');
 
         // Rotas dos Produtos
         Route::get('/produtos', [ProductController::class, 'index'])->name('produtos');

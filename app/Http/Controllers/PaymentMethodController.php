@@ -27,6 +27,22 @@ class PaymentMethodController extends Controller
         ]);
     }
 
+
+
+    public function apiPaymentMethods(Request $request)
+    {
+        Log::info('Rota apiPaymentMethods foi chamada');
+
+        $user = Auth::user();
+        $empresaId = $user->empresa_id;
+
+        // Busca as formas de pagamento da empresa do usuário autenticado
+        $paymentMethods = PaymentMethod::where('empresa_id', $empresaId)->get();
+
+        return response()->json($paymentMethods);
+    }
+
+
     /**
      * Criar uma nova forma de pagamento.
      */

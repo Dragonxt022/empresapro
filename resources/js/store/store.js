@@ -30,5 +30,9 @@ export const useModalStore = defineStore('modal', {
       this.isSalesPanelVisible = false;
       this.salesPanelData = null;
     },
+    // Abrir modal de formas de pagamento
+    openPaymentMethodsModal() {
+      this.activateComponent('PaymentMethods');
+    },
   },
 });

@@ -1,16 +1,14 @@
 <template>
   <!-- Categorias -->
-  <div
-    class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-8 gap-1 mb-2 shadow-md"
-  >
+  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-8 gap-1 mt-1">
     <div
       v-for="category in categories"
       :key="category.id"
-      class="flex flex-col items-center cursor-pointer"
+      class="flex flex-col items-center justify-center cursor-pointer transform transition-transform hover:scale-105"
       @click="filterProducts(category.id)"
     >
       <div
-        class="w-16 h-16 rounded-full flex items-center justify-center shadow-xl"
+        class="w-16 h-16 rounded-full flex items-center justify-center bg-white shadow-xl transform transition-transform hover:scale-110"
         :class="{ 'bg-blue-900': selectedCategory === category.id }"
       >
         <img
@@ -21,7 +19,9 @@
           class="w-full h-full rounded-full object-cover"
         />
       </div>
-      <p class="text-sm mt-2 text-center font-semibold text-gray-500">
+      <p
+        class="text-sm mt-1 text-center font-semibold text-gray-700 hover:text-blue-900 transition-colors"
+      >
         {{ category.name }}
       </p>
     </div>
@@ -31,10 +31,7 @@
   <SearchBar class="p-1" @search="handleSearch" />
 
   <!-- Produtos -->
-  <div
-    class="h-[500px] overflow-y-scroll mt-3 flex-grow p-2"
-    @scroll="handleScroll"
-  >
+  <div class="overflow-y-auto mt-4 flex-grow p-2" @scroll="handleScroll">
     <transition-group
       name="product-fade"
       tag="div"
@@ -43,32 +40,38 @@
       <div
         v-for="product in allProducts"
         :key="product.id"
-        class="bg-white shadow-xl rounded-lg p-2 flex flex-col items-center cursor-pointer card"
+        class="bg-white shadow-xl rounded-lg p-4 flex flex-col items-center justify-between relative overflow-hidden transform transition-transform hover:scale-105 hover:shadow-2xl cursor-pointer"
         @click="addProduct(product)"
       >
         <!-- Círculo com a quantidade -->
         <div
           v-if="getProductQuantity(product.id) > 0"
-          class="absolute top-0 right-0 flex items-center justify-center w-5 h-5 bg-blue-500 text-white text-xs rounded-full"
+          class="absolute top-2 right-2 flex items-center justify-center w-6 h-6 bg-blue-500 text-white text-xs rounded-full border-2 border-white"
         >
           {{ getProductQuantity(product.id) }}
         </div>
 
+        <!-- Imagem do Produto -->
         <img
           :src="`/storage/${product.image_path || 'default-product-image.jpg'}`"
           alt="Produto"
-          class="object-cover w-32 rounded-md mb-1"
+          class="object-cover w-24 h-24 rounded-md mb-3 transition-transform duration-200 transform hover:scale-110"
         />
+
+        <!-- Nome do Produto -->
         <p class="text-sm font-semibold text-gray-800 text-center mb-1">
           {{ product.name }}
         </p>
-        <p class="text-sm font-semibold text-gray-600">
-          R$ {{ product.price }}
-        </p>
+
+        <!-- Preço -->
+        <p class="text-sm font-medium text-gray-600">R$ {{ product.price }}</p>
       </div>
     </transition-group>
 
-    <div v-if="loading" class="text-center mt-4">Carregando...</div>
+    <!-- Loader -->
+    <div v-if="loading" class="text-center mt-6 text-gray-500">
+      Carregando...
+    </div>
   </div>
 </template>
 
@@ -233,5 +236,15 @@ onMounted(async () => {
 .product-fade-enter-to {
   opacity: 1;
   transform: translateY(0);
+}
+
+/* Ocultar barra de rolagem */
+div::-webkit-scrollbar {
+  display: none;
+}
+
+div {
+  -ms-overflow-style: none; /* IE 10+ */
+  scrollbar-width: none; /* Firefox */
 }
 </style>

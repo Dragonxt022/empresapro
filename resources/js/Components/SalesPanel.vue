@@ -1,10 +1,13 @@
+<!-- Compnet SalesPainel -->
 <template>
   <div class="modal-wrapper" v-if="isVisible">
     <div class="content-wrapper">
       <section>
         <div class="grid grid-cols-1 lg:grid-cols-[450px_auto] gap-1 p-1">
           <!-- Card Esquerdo -->
-          <div class="bg-white shadow-sm rounded-lg p-3 flex flex-col h-full">
+          <div
+            class="bg-white shadow-sm rounded-lg p-2 flex flex-col h-[calc(100vh-60px)]"
+          >
             <div class="flex items-center space-x-3 shadow-sm">
               <div class="w-9 h-9 flex items-center justify-center">
                 <i class="fa-solid fa-cart-shopping"></i>
@@ -120,20 +123,33 @@
             </div>
             <button
               class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-6 w-full"
+              @click="showPaymentMethodsModal = true"
             >
               Adicionar Forma de Pagamento
             </button>
+
+            <!-- Modal de Adicionar Valor -->
+            <PaymentMethods
+              v-if="showPaymentMethodsModal"
+              :subtotal="subtotal"
+              :added-value="addedValue"
+              :discount-value="discountValue"
+              @save-payments="handlePaymentMethods"
+              @close="showPaymentMethodsModal = false"
+            />
           </div>
 
           <!-- Card Direito -->
-          <div class="bg-white shadow-sm rounded-lg">
+          <div
+            class="bg-white shadow-sm rounded-lg p-2 flex flex-col h-[calc(100vh-60px)]"
+          >
             <ProductList
               :categories="categories"
               :cart-items="cartItems"
               @add-to-cart="addToCart"
             />
             <button
-              class="bg-blue-500 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded mt-6 w-full"
+              class="bg-blue-500 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded mt-1 w-full"
             >
               Salvar ({{ totalItems }} itens)
             </button>
@@ -151,40 +167,58 @@ import DiscountModal from '@/Components/DiscountModal.vue';
 import AddValueModal from '@/Components/AddValueModal.vue';
 import ClearCartModal from '@/Components/ClearCartModal.vue';
 import { useModalStore } from '@/store/store';
+import PaymentMethods from './PaymentMethods.vue';
 
 const modalStore = useModalStore();
 
 const isVisible = computed(() => modalStore.isSalesPanelVisible);
-// const mesa = computed(() => modalStore.salesPanelData?.mesa);
 
 // Variáveis reativas
-const showDiscountModal = ref(false); // Controle da modal de desconto
-const showAddValueModal = ref(false); // Controle da modal de adicionar valor
+const showDiscountModal = ref(false);
+const showAddValueModal = ref(false);
+const showPaymentMethodsModal = ref(false);
+const showClearCartModal = ref(false);
 
-const showClearCartModal = ref(false); // Controle da modal de limpeza
+const addedValue = ref(0);
+const discountValue = ref(0);
+const remainingAmount = ref(0);
 
-const addedValue = ref(0); // Valor adicionado ao total
-const discountValue = ref(0); // Valor do desconto em centavos
+const cartItems = ref([]);
 
-const cartItems = ref([]); // Itens do carrinho
+// Dados reativos para os métodos de pagamento
+const paymentMethodsSelected = ref({});
 
-// Props do Laravel
+const handlePaymentMethods = (selectedPayments) => {
+  paymentMethodsSelected.value = selectedPayments;
+
+  // Calcular o valor total pago pelos métodos selecionados
+  const totalPaid = selectedPayments.reduce(
+    (sum, payment) => sum + payment.amount,
+    0
+  );
+
+  // Calcular o valor restante
+  const totalToPay = totalWithDiscountAndAdd.value;
+  remainingAmount.value = totalToPay - totalPaid;
+
+  if (remainingAmount.value <= 0) {
+    remainingAmount.value = 0;
+  }
+};
+
 const props = defineProps({
   mesaId: {
     type: Number,
     required: false,
   },
-
   products: {
     type: Object,
     required: true,
   },
-
   categories: {
     type: Array,
     required: true,
   },
-
   filters: {
     type: Object,
     required: true,
@@ -196,19 +230,17 @@ const closePanel = () => {
   modalStore.closeSalesPanel();
 };
 
-// Função para resetar os campos
 const resetFields = () => {
-  cartItems.value = []; // Limpar itens do carrinho
-  addedValue.value = 0; // Limpar valor adicionado
-  discountValue.value = 0; // Limpar valor do desconto
+  cartItems.value = [];
+  addedValue.value = 0;
+  discountValue.value = 0;
 };
 
-// Função para limpar o carrinho
 const clearCart = () => {
-  cartItems.value = []; // Limpar itens do carrinho
-  showClearCartModal.value = false; // Fechar a modal
+  cartItems.value = [];
+  showClearCartModal.value = false;
 };
-// Adicionar produto ao carrinho
+
 const addToCart = (product) => {
   const priceInCents = Math.round(parseFloat(product.price) * 100) || 0;
   const existingProduct = cartItems.value.find(
@@ -229,24 +261,17 @@ const addToCart = (product) => {
 };
 
 const applyDiscount = (value) => {
-  // Converter o valor para centavos
   const valueInCents = Math.round(parseFloat(value) * 100);
-
-  // Garantir que o desconto seja válido (maior ou igual a zero)
   const validatedValue = valueInCents >= 0 ? valueInCents : 0;
-
-  // Converter novamente para reais se necessário
   const finalValue = validatedValue / 100;
 
   discountValue.value = finalValue;
 };
 
-// Função para aplicar o valor adicionado
 const applyAddedValue = (value) => {
   addedValue.value = Math.round(parseFloat(value) * 100); // Armazenar em centavos
 };
 
-// Função para formatar valores em reais
 const formatCurrency = (valueInCents) => {
   const valueInReais = valueInCents / 100;
   return valueInReais.toLocaleString('pt-BR', {
@@ -271,7 +296,6 @@ const totalWithDiscountAndAdd = computed(() => {
   return totalWithDiscount.value + addedValue.value;
 });
 
-// Computed: Formatação de valores
 const formattedSubtotal = computed(() => formatCurrency(subtotal.value));
 const formattedDiscount = computed(() => formatCurrency(discountValue.value));
 const formattedTotalWithDiscount = computed(() =>
@@ -289,30 +313,44 @@ const formattedCartItems = computed(() =>
   }))
 );
 
-// Total de itens no carrinho
 const totalItems = computed(() =>
   cartItems.value.reduce((sum, item) => sum + item.quantity, 0)
 );
+
+const saleDetails = computed(() => ({
+  mesaId: props.mesaId,
+  products: cartItems.value,
+  payments: paymentMethodsSelected.value,
+  total: totalWithDiscountAndAdd.value,
+}));
+
+// Emitir os dados de pagamento para o componente pai
+const saveSale = () => {
+  console.log('Venda salva:', saleDetails.value);
+  // Emitir para o componente pai ou enviar para o backend
+  $emit('save-sale', saleDetails.value);
+};
 </script>
 
 <style scoped>
 .modal-wrapper {
   position: fixed;
-  top: 0;
+  top: 60px;
   left: 0;
-  width: 100vw;
-  height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 9999;
+  overflow: hidden; /* Evita que a modal se estenda além da tela */
 }
 
 .content-wrapper {
   width: 100%;
   max-width: 100%; /* Largura máxima */
-  max-height: 100%; /* Altura máxima */
-  overflow-y: auto; /* Scroll se necessário */
+  overflow-y: auto; /* Adiciona rolagem se necessário */
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 0px; /* Ajuste de padding conforme necessário */
+  background: #fff;
+  box-sizing: border-box;
 }
 </style>
