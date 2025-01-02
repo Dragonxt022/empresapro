@@ -4,8 +4,8 @@
     <input
       v-model="searchTerm"
       type="text"
-      placeholder="Pesquisar por nome ou código de barras"
-      class="border border-gray-300 rounded-lg w-full p-2 pl-5 pr-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 ease-in-out"
+      placeholder="     Pesquisar por nome ou código de barras"
+      class="border border-gray-300 rounded-lg w-full p-3 pl-5 pr-4 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 ease-in-out"
       @input="onSearch"
     />
     <!-- Ícone de pesquisa -->

@@ -16,10 +16,11 @@ return new class extends Migration
             $table->foreignId('mesa_id')->constrained('mesas')->onDelete('cascade');
             $table->foreignId('empresa_id')->constrained('empresas')->onDelete('cascade');
             $table->string('cliente')->nullable(); // Cliente não identificado
+            $table->string('status')->default('aberta'); // Status da venda, 'aberta' por padrão
             $table->foreignId('vendido_por')->constrained('users')->onDelete('cascade'); // Quem realizou a venda
             $table->decimal('desconto', 10, 2)->default(0);
             $table->decimal('acrescimo', 10, 2)->default(0);
-            $table->decimal('valor_total', 10, 2)->default(0)->change();
+            $table->decimal('valor_total', 10, 2)->default(0);
             $table->timestamps();
         });
     }

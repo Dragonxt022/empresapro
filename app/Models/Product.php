@@ -45,6 +45,14 @@ class Product extends Model
         return $this->belongsTo(Supplier::class);
     }
 
+    // Relacionamento com vendas através da tabela pivot
+    public function vendas()
+    {
+        return $this->belongsToMany(Venda::class, 'venda_produtos')
+                    ->withPivot('quantidade', 'valor_unitario', 'valor_total')
+                    ->withTimestamps();
+    }
+
     // Relacionamento com variações
     public function variations()
     {

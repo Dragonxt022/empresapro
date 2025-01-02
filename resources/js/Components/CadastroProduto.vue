@@ -7,7 +7,7 @@
     >
       <!-- Modal Content -->
       <div
-        class="modal-content w-50 sm:w-4/5 md:w-2/3 lg:w-1/2 xl:w-1/3 bg-white p-6 h-full overflow-auto transform transition-all duration-300 ease-in-out"
+        class="modal-content w-50 sm:w-4/5 md:w-2/3 lg:w-1/2 xl:w-1/2 bg-white p-6 h-full overflow-auto transform transition-all duration-300 ease-in-out"
       >
         <button
           @click="desativarComponentes"
@@ -266,7 +266,7 @@
 import { ref } from 'vue';
 import { router } from '@inertiajs/vue3';
 import InputNumber from './InputNumber.vue';
-import { notify } from '@/Plugins/notify';
+import { notify } from '@/Plugins/Notify';
 import { useModalStore } from '@/store/store'; // Importando a store
 import _debounce from 'lodash.debounce';
 

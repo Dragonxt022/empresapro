@@ -4,7 +4,7 @@
     class="fixed inset-0 z-50 bg-gray-900 bg-opacity-50 flex justify-end"
   >
     <div
-      class="modal-content w-50 sm:w-4/5 md:w-2/3 lg:w-1/2 xl:w-1/3 bg-white p-6 h-full overflow-auto transform transition-all duration-300 ease-in-out"
+      class="modal-content w-50 sm:w-4/5 md:w-2/3 lg:w-1/2 xl:w-1/2 bg-white p-6 h-full overflow-auto transform transition-all duration-300 ease-in-out"
     >
       <button
         @click="resetarFormulario"
@@ -133,7 +133,7 @@
 <script setup>
 import { ref } from 'vue';
 import { useModalStore } from '@/store/store';
-import { notify } from '@/Plugins/notify';
+import { notify } from '@/Plugins/Notify';
 import { router } from '@inertiajs/vue3';
 
 const modalStore = useModalStore();

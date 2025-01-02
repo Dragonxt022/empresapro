@@ -11,12 +11,18 @@ class VendaProduto extends Model
 
     protected $fillable = [
         'venda_id',
+        'product_id',
         'nome',
         'valor_unitario',
         'quantidade',
         'valor_total',
     ];
 
+    // Relacionamento com Produto
+    public function produto()
+    {
+        return $this->belongsTo(Product::class, 'product_id');
+    }
     // Relacionamento com Venda
     public function venda()
     {

@@ -9,7 +9,7 @@
               <div class="w-9 h-9 flex items-center justify-center">
                 <i class="fa-solid fa-cart-shopping"></i>
               </div>
-              <h4 class="text-xl font-bold">{{ mesa.nome }}</h4>
+              <h4 class="text-xl font-bold text-sky-500">{{ mesa.nome }}</h4>
             </div>
             <div class="h-96 overflow-y-scroll mt-3 flex-grow">
               <div class="flex flex-col space-y-2">

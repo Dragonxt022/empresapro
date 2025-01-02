@@ -33,11 +33,11 @@
           <li
             v-for="(value, methodKey) in paymentValues"
             :key="methodKey"
-            class="flex justify-between items-center bg-gray-100 p-2 rounded mb-2"
+            class="flex items-center justify-between bg-gray-100 p-2 rounded mb-2"
           >
             <!-- Exibir ID e Nome -->
-            <span>
-              {{ methodKey }} - {{ getPaymentMethodLabel(methodKey) }}:
+            <span class="flex-1 truncate pr-4">
+              {{ getPaymentMethodLabel(methodKey) }}:
             </span>
 
             <!-- Input editável formatado em Real -->
@@ -45,12 +45,12 @@
               v-model="formattedPaymentValues[methodKey]"
               @blur="updatePaymentValue(methodKey)"
               type="text"
-              class="border border-gray-300 rounded w-24 p-2 text-right"
+              class="border border-gray-300 rounded w-28 text-right p-1"
             />
 
             <!-- Botão de remover -->
             <button
-              class="text-red-500 hover:text-red-700"
+              class="text-red-500 hover:text-red-700 ml-4"
               @click="removePaymentMethod(methodKey)"
             >
               <i class="fa-solid fa-trash"></i>
@@ -235,6 +235,8 @@ const savePayments = () => {
     methods,
     totalPaid: props.subtotal + props.addedValue - props.discountValue,
   });
+
+  emit('close');
 };
 </script>
 
@@ -251,7 +253,7 @@ const savePayments = () => {
 }
 .tamanho-modal {
   width: 100%;
-  max-width: 600px; /* Tamanho máximo para dispositivos grandes */
+  max-width: 800px; /* Tamanho máximo para dispositivos grandes */
   background-color: #ffffff;
   border-radius: 10px;
   overflow: hidden;

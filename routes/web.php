@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CaixaBaocao;
+use App\Http\Controllers\CaixaMovimentoController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\MesaController;
@@ -49,9 +50,10 @@ Route::middleware([
         })->name('tabela');
 
 
-        // ajax
+        // API Produters
         Route::get('/api/products', [CaixaBaocao::class, 'fetchProducts'])->name('products.fetch');
         Route::get ('/api/paymentMethod', [PaymentMethodController::class, 'apiPaymentMethods'])->name('paymentMethod.fetch');
+
 
         // Rotas dos Produtos
         Route::get('/produtos', [ProductController::class, 'index'])->name('produtos');
@@ -64,7 +66,7 @@ Route::middleware([
         // Categoria
         Route::post('/categoria/adicionar', [CategoryController::class, 'store'])->name('categoria.adicionar');
 
-        // Fomra pagamentos
+        // Fomrm6a pagamentos
         Route::get('/forma/pagamentos', [PaymentMethodController::class, 'index'])->name('formas_pagamento');
         Route::post('/pagamentos/adicionar', [PaymentMethodController::class, 'store'])->name('formas_pagamento.adicionar');
         Route::delete('/pagamentos/{paymentMethod}', [PaymentMethodController::class, 'destroy'])->name('paymentMethod.destroy');
@@ -77,6 +79,30 @@ Route::middleware([
         Route::get('/mesas', [MesaController::class, 'index'])->name('mesas');
         Route::post('/mesas/{id}/abrir', [MesaController::class, 'abrir'])->name('mesas.abrir');
 
+        // API Mesas
+        Route::get('/api/mesas/listar', [MesaController::class, 'listarMesas'])->name('mesas.listar');
+        Route::post('/api/vendas/salvar', [MesaController::class, 'salvarOuAtualizarVenda'])->name('salvaOuAtualizaVenda');
+        Route::get('/api/vendas/{mesaId}', [MesaController::class, 'detalhesVenda'])->name('vendas.detalhes');
+        Route::post('/api/vendas/finalizar/{mesaId}', [MesaController::class, 'finalizarVenda'])->name('vendas.finalizar');
+
+
+
+        // Alterar nome da mesa
+        Route::put('/mesas/{id}/alterar-nome', [MesaController::class, 'alterarNome'])->name('mesas.alterar-nome');
+
+
+        Route::delete('/api/vendas/{id}/excluir', [MesaController::class, 'excluirVenda'])->name('vendas.excluir');
+
+
+        // Historico
+        Route::get('/api/historico/vendas', [MesaController::class, 'historicoDeVendas'])->name('historico.vendas');
+
+        // Operações de caixa
+        // Verificar status do caixa
+        Route::get('/api/caixa/status', [CaixaMovimentoController::class, 'verificarStatusCaixa'])->name('caixa.status');
+
+        // Abrir caixa
+        Route::post('/api/caixa/abrir', [CaixaMovimentoController::class, 'abrirCaixa'])->name('caixa.abrir');
 
 
 

@@ -1,8 +1,6 @@
 <script setup>
 import { defineProps } from 'vue';
-
 import { Head } from '@inertiajs/vue3';
-import Navbar from '@/Components/Navbar.vue';
 import Slidebar from '@/Components/Slidebar.vue';
 
 // Recebendo as props do componente pai
@@ -13,9 +11,13 @@ const props = defineProps({
 
 <template>
   <Head :title="title" />
-  <div class="wrapper">
-    <Navbar />
+  <div class="h-screen flex flex-col md:flex-row">
+    <!-- Sidebar -->
     <Slidebar />
-    <slot />
+
+    <!-- Content Area -->
+    <main class="flex-1 bg-gray-100 p-6 overflow-y-auto">
+      <slot />
+    </main>
   </div>
 </template>

@@ -1,6 +1,6 @@
 <template>
   <!-- Categorias -->
-  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-8 gap-1 mt-1">
+  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-8 gap-1 mt-2">
     <div
       v-for="category in categories"
       :key="category.id"
@@ -8,7 +8,7 @@
       @click="filterProducts(category.id)"
     >
       <div
-        class="w-16 h-16 rounded-full flex items-center justify-center bg-white shadow-xl transform transition-transform hover:scale-110"
+        class="w-16 h-16 rounded-full flex items-center justify-center bg-white shadow-xl transform transition-transform hover:scale-110 select-none"
         :class="{ 'bg-blue-900': selectedCategory === category.id }"
       >
         <img
@@ -28,7 +28,7 @@
   </div>
 
   <!-- Barra de pesquisa -->
-  <SearchBar class="p-1" @search="handleSearch" />
+  <SearchBar class="p-1 mt-2" @search="handleSearch" />
 
   <!-- Produtos -->
   <div class="overflow-y-auto mt-4 flex-grow p-2" @scroll="handleScroll">
@@ -40,7 +40,7 @@
       <div
         v-for="product in allProducts"
         :key="product.id"
-        class="bg-white shadow-xl rounded-lg p-4 flex flex-col items-center justify-between relative overflow-hidden transform transition-transform hover:scale-105 hover:shadow-2xl cursor-pointer"
+        class="bg-white shadow-xl rounded-lg p-4 flex flex-col items-center justify-between relative overflow-hidden transform transition-transform hover:scale-105 hover:shadow-2xl cursor-pointer select-none"
         @click="addProduct(product)"
       >
         <!-- Círculo com a quantidade -->
@@ -55,7 +55,7 @@
         <img
           :src="`/storage/${product.image_path || 'default-product-image.jpg'}`"
           alt="Produto"
-          class="object-cover w-24 h-24 rounded-md mb-3 transition-transform duration-200 transform hover:scale-110"
+          class="object-cover w-16 h-16 rounded-md mb-3 transition-transform duration-200 transform hover:scale-110"
         />
 
         <!-- Nome do Produto -->
@@ -64,7 +64,9 @@
         </p>
 
         <!-- Preço -->
-        <p class="text-sm font-medium text-gray-600">R$ {{ product.price }}</p>
+        <p class="text-sm font-medium text-gray-600">
+          R$ {{ formatPrice(product.price) }}
+        </p>
       </div>
     </transition-group>
 
@@ -95,6 +97,14 @@ const selectedCategory = ref(null); // Categoria selecionada
 const loading = ref(false);
 const searchTerm = ref(''); // Termo de pesquisa
 const typingTimeout = ref(null); // Para controlar o tempo de espera (debounce)
+
+const formatPrice = (priceInCents) => {
+  // Multiplica o valor por 100 e depois divide para manter a lógica requerida
+  const adjustedPrice = priceInCents * 100;
+  // Converte centavos para reais com duas casas decimais
+  const reais = (adjustedPrice / 100).toFixed(2);
+  return reais.replace('.', ','); // Troca o ponto por vírgula
+};
 
 // Função separada para filtragem de produtos
 const filterProductsBySearchAndCategory = async () => {

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('empresa_id')->constrained('empresas')->onDelete('cascade');
             $table->string('nome', 255);
-            $table->enum('status', ['aberto', 'livre'])->default('livre');
+            $table->enum('status', ['aberto', 'livre', 'pendente'])->default('livre');
             $table->timestamps();
         });
     }

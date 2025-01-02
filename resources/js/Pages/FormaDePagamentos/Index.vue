@@ -1,4 +1,6 @@
+<!-- pages/Dashboard.vue -->
 <script setup>
+import IconHomePreto from '@/Components/Icons/IconHomePreto.vue';
 import { ref } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { useModalStore } from '@/store/store';
@@ -33,115 +35,142 @@ const typeDescriptions = {
 
 <template>
   <AppLayout title="Formas de Pagamento">
-    <div class="content-wrapper">
-      <!-- Cabeçalho -->
-      <section class="content-header py-4">
-        <div class="container-fluid">
-          <div class="row mb-2">
-            <div class="col-sm-6">
-              <h1>
-                <i class="fa-solid fa-wallet"></i>
-                Formas de Pagamento
-              </h1>
+    <!-- Conteúdo principal -->
+    <div class="flex flex-1">
+      <!-- Sidebar está contido no layout, então não é necessário aqui -->
+      <div class="content-wrapper flex-1 bg-gray-100 p-4">
+        <!-- Seção de conteúdo -->
+        <section class="content">
+          <div class="container-fluid">
+            <div class="row">
+              <!-- Adicione o conteúdo aqui -->
+              <div class="col-12">
+                <h1 class="text-2xl font-bold text-sky-500 flex items-center">
+                  <!-- Ícone -->
+                  <IconHomePreto class="h-6 w-6 mr-2" />
+                  Formas de Pagamento
+                </h1>
+                <div class="mt-4"></div>
+                <div class="container-fluid">
+                  <div class="flex justify-between items-center">
+                    <div class="flex space-x-4">
+                      <button
+                        class="px-4 py-3 rounded-t-lg focus:outline-none"
+                        :class="{
+                          'bg-white text-blue-600 font-semibold':
+                            tab === 'Metodos',
+                          'bg-gray-100 text-gray-600': tab !== 'Metodos',
+                        }"
+                        @click="tab = 'Metodos'"
+                      >
+                        Metodos
+                      </button>
+                    </div>
+
+                    <div class="flex gap-2">
+                      <button
+                        @click="ativarMetodoPagamento"
+                        class="px-4 py-2 bg-blue-500 text-white rounded"
+                      >
+                        <i class="fa-solid fa-plus"></i>
+                        Nova Forma de Pagamento
+                      </button>
+
+                      <transition name="slide">
+                        <CadastroMetoPagamento
+                          v-if="
+                            modalStore.activeComponent === 'metodo_pagamento'
+                          "
+                          :paymentMethods="paymentMethods"
+                        />
+                      </transition>
+
+                      <transition name="slide">
+                        <EditarMetodoPagamento
+                          v-if="
+                            modalStore.activeComponent ===
+                            'editar_metodo_pagamento'
+                          "
+                          :paymentMethods="modalStore.selectedPaymentMethod"
+                        />
+                      </transition>
+                    </div>
+                  </div>
+                  <!-- Tabela -->
+                  <div class="bg-white shadow-md rounded-lg p-4">
+                    <table
+                      class="table-auto w-full text-left border-collapse mt-4 shadow-md rounded-lg overflow-hidden"
+                    >
+                      <thead class="bg-gray-100 border-b">
+                        <tr>
+                          <th class="px-4 py-3">Nome</th>
+                          <th
+                            class="px-4 py-3 text-center hidden sm:table-cell"
+                          >
+                            Tipo
+                          </th>
+                          <th
+                            class="px-4 py-3 text-center hidden lg:table-cell"
+                          >
+                            Taxa (%)
+                          </th>
+                          <th
+                            class="px-4 py-3 text-center hidden xl:table-cell"
+                          >
+                            Conta Bancária
+                          </th>
+                          <th
+                            class="px-4 py-3 text-center hidden xl:table-cell"
+                          >
+                            Status
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr
+                          v-for="method in paymentMethods"
+                          :key="method.id"
+                          @click="
+                            modalStore.activateComponent(
+                              'editar_metodo_pagamento'
+                            );
+                            modalStore.setSelectedPaymentMethod(method);
+                          "
+                          class="border-b cursor-pointer"
+                        >
+                          <td class="px-4 py-3">{{ method.name }}</td>
+                          <td
+                            class="px-3 py-3 text-center hidden md:table-cell"
+                          >
+                            {{
+                              typeDescriptions[method.type] || 'Desconhecido'
+                            }}
+                          </td>
+                          <td
+                            class="px-4 py-3 text-center hidden lg:table-cell"
+                          >
+                            {{ method.fee_percentage }}%
+                          </td>
+                          <td
+                            class="px-4 py-3 text-center hidden xl:table-cell"
+                          >
+                            {{ method.bank_account || 'Não informado' }}
+                          </td>
+                          <td
+                            class="px-4 py-3 text-center hidden xl:table-cell"
+                          >
+                            {{ method.is_active ? 'Ativo' : 'Inativo' }}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
-
-      <!-- Conteúdo -->
-      <section class="content">
-        <div class="container-fluid">
-          <div class="flex justify-between items-center">
-            <div class="flex space-x-4">
-              <button
-                class="px-4 py-3 rounded-t-lg focus:outline-none"
-                :class="{
-                  'bg-white text-blue-600 font-semibold': tab === 'Metodos',
-                  'bg-gray-100 text-gray-600': tab !== 'Metodos',
-                }"
-                @click="tab = 'Metodos'"
-              >
-                Metodos
-              </button>
-            </div>
-
-            <div class="flex gap-2">
-              <button
-                @click="ativarMetodoPagamento"
-                class="px-4 py-2 bg-blue-500 text-white rounded"
-              >
-                <i class="fa-solid fa-plus"></i>
-                Nova Forma de Pagamento
-              </button>
-
-              <transition name="slide">
-                <CadastroMetoPagamento
-                  v-if="modalStore.activeComponent === 'metodo_pagamento'"
-                  :paymentMethods="paymentMethods"
-                />
-              </transition>
-
-              <transition name="slide">
-                <EditarMetodoPagamento
-                  v-if="
-                    modalStore.activeComponent === 'editar_metodo_pagamento'
-                  "
-                  :paymentMethods="modalStore.selectedPaymentMethod"
-                />
-              </transition>
-            </div>
-          </div>
-          <!-- Tabela -->
-          <div class="bg-white shadow-md rounded-lg p-4">
-            <table
-              class="table-auto w-full text-left border-collapse mt-4 shadow-md rounded-lg overflow-hidden"
-            >
-              <thead class="bg-gray-100 border-b">
-                <tr>
-                  <th class="px-4 py-3">Nome</th>
-                  <th class="px-4 py-3 text-center hidden sm:table-cell">
-                    Tipo
-                  </th>
-                  <th class="px-4 py-3 text-center hidden lg:table-cell">
-                    Taxa (%)
-                  </th>
-                  <th class="px-4 py-3 text-center hidden xl:table-cell">
-                    Conta Bancária
-                  </th>
-                  <th class="px-4 py-3 text-center hidden xl:table-cell">
-                    Status
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="method in paymentMethods"
-                  :key="method.id"
-                  @click="
-                    modalStore.activateComponent('editar_metodo_pagamento');
-                    modalStore.setSelectedPaymentMethod(method);
-                  "
-                  class="border-b cursor-pointer"
-                >
-                  <td class="px-4 py-3">{{ method.name }}</td>
-                  <td class="px-3 py-3 text-center hidden md:table-cell">
-                    {{ typeDescriptions[method.type] || 'Desconhecido' }}
-                  </td>
-                  <td class="px-4 py-3 text-center hidden lg:table-cell">
-                    {{ method.fee_percentage }}%
-                  </td>
-                  <td class="px-4 py-3 text-center hidden xl:table-cell">
-                    {{ method.bank_account || 'Não informado' }}
-                  </td>
-                  <td class="px-4 py-3 text-center hidden xl:table-cell">
-                    {{ method.is_active ? 'Ativo' : 'Inativo' }}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
+        </section>
+      </div>
     </div>
   </AppLayout>
 </template>

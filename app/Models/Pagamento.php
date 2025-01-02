@@ -20,4 +20,5 @@ class Pagamento extends Model
     {
         return $this->belongsTo(Venda::class);
     }
+
 }

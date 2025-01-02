@@ -34,5 +34,9 @@ export const useModalStore = defineStore('modal', {
     openPaymentMethodsModal() {
       this.activateComponent('PaymentMethods');
     },
+    // Definir método de pagamento selecionado
+    setSelectedPaymentMethod(paymentMethod) {
+      this.selectedPaymentMethod = paymentMethod;
+    },
   },
 });
