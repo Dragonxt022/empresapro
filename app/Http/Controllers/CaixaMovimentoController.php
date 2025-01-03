@@ -56,9 +56,11 @@ class CaixaMovimentoController extends Controller
     {
         $request->validate([
             'valor_final' => 'required|numeric|min:0',
+            'diferenca' => 'required|numeric|min:0',
         ]);
 
         try {
+            // Recupera o caixa atual
             $caixaAtual = CaixaMovimento::where('empresa_id', Auth::user()->empresa_id)
                 ->where('status', 'aberto')
                 ->first();
@@ -67,10 +69,12 @@ class CaixaMovimentoController extends Controller
                 return response()->json(['error' => 'Não há caixa aberto.'], 400);
             }
 
+            // Atualiza os dados do caixa, incluindo o valor final e a diferença
             $caixaAtual->update([
                 'data_hora_fechamento' => now(),
                 'valor_final' => $request->valor_final,
                 'status' => 'fechado',
+                'diferenca' => $request->diferenca,  // Atualizando a diferença
             ]);
 
             return response()->json(['success' => true]);

@@ -1,20 +1,24 @@
 <template>
-  <div class="fixed inset-0 payment-methods bg-modal rounded-lg p-4">
+  <div
+    class="fixed inset-0 payment-methods bg-modal flex items-center justify-center p-4"
+  >
     <div
-      class="bg-white p-6 rounded-md shadow-md text-center tamanho-modal flex flex-col"
+      class="bg-white p-6 rounded-lg shadow-lg w-full max-w-xl transform transition-all duration-300 ease-in-out animate-modal"
     >
-      <h3 class="text-lg font-bold mb-4">Adicionar Forma de Pagamento</h3>
+      <h3 class="text-xl font-bold mb-6 text-gray-800 text-center">
+        Adicionar Forma de Pagamento
+      </h3>
 
       <!-- Botões de seleção de métodos -->
-      <div class="grid grid-cols-4 gap-2 mb-4">
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-6">
         <button
           v-for="method in paymentMethods"
           :key="method.name"
           :disabled="isMethodDisabled(method.name)"
           :class="[
-            'py-2 px-4 rounded',
+            'py-2 px-4 rounded-md text-sm font-medium transition-colors duration-200',
             selectedMethod === method.name
-              ? 'bg-blue-500 text-white'
+              ? 'bg-blue-600 text-white'
               : 'bg-gray-200 text-gray-700',
             isMethodDisabled(method.name)
               ? 'opacity-50 cursor-not-allowed'
@@ -27,30 +31,27 @@
       </div>
 
       <!-- Lista de pagamentos -->
-      <div class="mb-4">
-        <h4 class="text-sm font-semibold mb-2">Pagamentos Adicionados</h4>
+      <div class="mb-6">
+        <h4 class="text-sm font-semibold text-center mb-2 text-gray-700">
+          Pagamentos Adicionados
+        </h4>
         <ul>
           <li
             v-for="(value, methodKey) in paymentValues"
             :key="methodKey"
-            class="flex items-center justify-between bg-gray-100 p-2 rounded mb-2"
+            class="flex items-center justify-between bg-gray-100 p-3 rounded-md mb-3 shadow-sm"
           >
-            <!-- Exibir ID e Nome -->
-            <span class="flex-1 truncate pr-4">
+            <span class="text-sm text-gray-600 flex-1 truncate">
               {{ getPaymentMethodLabel(methodKey) }}:
             </span>
-
-            <!-- Input editável formatado em Real -->
             <input
               v-model="formattedPaymentValues[methodKey]"
               @blur="updatePaymentValue(methodKey)"
               type="text"
-              class="border border-gray-300 rounded w-28 text-right p-1"
+              class="border border-gray-300 rounded-md w-28 text-right py-1 px-2 text-sm"
             />
-
-            <!-- Botão de remover -->
             <button
-              class="text-red-500 hover:text-red-700 ml-4"
+              class="text-red-600 hover:text-red-700 ml-4"
               @click="removePaymentMethod(methodKey)"
             >
               <i class="fa-solid fa-trash"></i>
@@ -60,20 +61,20 @@
       </div>
 
       <!-- Resumo financeiro -->
-      <div class="text-sm mb-4">
-        <div class="flex justify-between">
+      <div class="text-sm mb-6">
+        <div class="flex justify-between font-semibold mb-2 text-gray-700">
           <span>Subtotal:</span>
           <span>{{ formatCurrency(subtotal) }}</span>
         </div>
-        <div class="flex justify-between text-green-500">
+        <div class="flex justify-between font-semibold mb-2 text-green-500">
           <span>Acréscimo:</span>
           <span>{{ formatCurrency(addedValue) }}</span>
         </div>
-        <div class="flex justify-between text-yellow-500">
+        <div class="flex justify-between font-semibold mb-2 text-yellow-500">
           <span>Desconto:</span>
           <span>{{ formatCurrency(discountValue) }}</span>
         </div>
-        <div class="flex justify-between font-bold text-lg">
+        <div class="flex justify-between font-bold text-lg text-gray-800">
           <span>Restante:</span>
           <span>{{ formatCurrency(remaining) }}</span>
         </div>
@@ -83,15 +84,15 @@
       </div>
 
       <!-- Área de Botões -->
-      <div class="flex justify-between mt-auto">
+      <div class="flex justify-between mt-6">
         <button
-          class="bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold py-2 px-4 rounded mr-2 w-full"
+          class="bg-gray-300 hover:bg-gray-400 text-gray-700 font-semibold py-2 px-4 rounded-md w-full mr-2"
           @click="$emit('close')"
         >
           Cancelar
         </button>
         <button
-          class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded w-full"
+          class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-md w-full"
           @click="savePayments"
           :disabled="remaining !== 0"
         >
@@ -240,149 +241,122 @@ const savePayments = () => {
 };
 </script>
 
-<style lang="css" scoped>
+<style scoped>
+@keyframes modalFadeIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Aplicar a animação de fade-in e zoom-in */
+.animate-modal {
+  animation: modalFadeIn 0.2s ease-out;
+}
+
 .payment-methods {
   z-index: 9999;
-  width: 100%;
-  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6); /* Fundo escurecido */
+  padding: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.bg-modal {
   background-color: rgba(0, 0, 0, 0.6); /* Fundo escurecido */
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 1rem;
-}
-.tamanho-modal {
   width: 100%;
-  max-width: 800px; /* Tamanho máximo para dispositivos grandes */
-  background-color: #ffffff;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); /* Sombra para destacar */
-  display: flex;
-  flex-direction: column;
-  padding: 1.5rem;
+  height: 100%;
 }
-.modal-header {
-  border-bottom: 1px solid #e5e5e5;
-  padding-bottom: 1rem;
-  margin-bottom: 1rem;
+
+.bg-white {
+  background-color: #fff;
 }
-.modal-header h3 {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #333333;
+
+.shadow-lg {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
-.payment-buttons {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); /* Responsivo */
-  gap: 0.5rem;
-  margin-bottom: 1rem;
+
+.grid-cols-2 {
+  grid-template-columns: repeat(2, 1fr);
 }
-.payment-buttons button {
-  font-size: 0.875rem;
-  padding: 0.5rem;
-  border-radius: 8px;
-  transition: all 0.3s ease;
+
+.sm\:grid-cols-3 {
+  grid-template-columns: repeat(3, 1fr);
 }
-.payment-buttons button:hover {
+
+.md\:grid-cols-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+button {
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+button:focus {
+  outline: none;
+}
+
+button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
 }
-.payment-buttons button.bg-blue-500 {
-  background-color: #2563eb; /* Azul mais profissional */
-  color: white;
-}
-.payment-buttons button.bg-gray-200 {
-  background-color: #f3f4f6;
-  color: #374151;
-}
-.payment-buttons button:disabled {
+
+button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
-.payment-list {
-  margin-bottom: 1.5rem;
+
+button.bg-green-600 {
+  background-color: #16a34a;
 }
-.payment-list ul {
-  list-style: none;
-  padding: 0;
+
+button.bg-green-600:hover {
+  background-color: #15803d;
 }
-.payment-list li {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.5rem 1rem;
-  background-color: #f9fafb;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  margin-bottom: 0.5rem;
+
+button.bg-gray-300 {
+  background-color: #e5e7eb;
 }
-.payment-list li span {
-  font-size: 0.875rem;
-  color: #374151;
-}
-.payment-list li input {
-  font-size: 0.875rem;
-  text-align: right;
-  border: 1px solid #d1d5db;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-}
-.payment-list li button {
-  background: none;
-  color: #ef4444;
-  border: none;
-  font-size: 1rem;
-  cursor: pointer;
-}
-.payment-summary {
-  font-size: 0.875rem;
-  color: #374151;
-}
-.payment-summary div {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 0.5rem;
-}
-.payment-summary div span:first-child {
-  color: #6b7280;
-}
-.payment-summary div span:last-child {
-  font-weight: 600;
-}
-.payment-summary .text-green-500 {
-  color: #10b981; /* Verde para valores positivos */
-}
-.payment-summary .text-yellow-500 {
-  color: #f59e0b; /* Amarelo para descontos */
-}
-.payment-summary .font-bold {
-  font-size: 1rem;
-}
-.modal-footer {
-  display: flex;
-  justify-content: space-between;
-  margin-top: auto;
-}
-.modal-footer button {
-  font-size: 0.875rem;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  font-weight: 600;
-}
-.modal-footer button.bg-gray-300 {
+
+button.bg-gray-300:hover {
   background-color: #d1d5db;
-  color: #374151;
-  transition: all 0.3s ease;
 }
-.modal-footer button.bg-gray-300:hover {
-  background-color: #9ca3af;
+
+button.bg-blue-600 {
+  background-color: #2563eb;
 }
-.modal-footer button.bg-green-500 {
-  background-color: #10b981;
-  color: white;
+
+button.bg-blue-600:hover {
+  background-color: #1d4ed8;
 }
-.modal-footer button.bg-green-500:hover {
-  background-color: #059669;
+
+button.bg-gray-200 {
+  background-color: #f3f4f6;
+}
+
+button.bg-gray-200:hover {
+  background-color: #e5e7eb;
+}
+
+input {
+  border-radius: 0.375rem;
+}
+
+input[type='text'] {
+  text-align: right;
+}
+
+input:focus {
+  outline: none;
+  border-color: #2563eb;
 }
 </style>

@@ -18,6 +18,7 @@ class Venda extends Model
         'acrescimo',
         'valor_total',
         'status',
+        'caixa_movimento_id',
     ];
 
     // Relacionamento com Mesa
@@ -48,5 +49,11 @@ class Venda extends Model
     public function vendedor()
     {
         return $this->belongsTo(User::class, 'vendido_por');
+    }
+
+    // Relacionamento com CaixaMovimento
+    public function caixaMovimento()
+    {
+        return $this->belongsTo(CaixaMovimento::class, 'caixa_movimento_id');
     }
 }

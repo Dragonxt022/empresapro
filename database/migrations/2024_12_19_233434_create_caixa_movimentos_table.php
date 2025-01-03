@@ -18,6 +18,7 @@ return new class extends Migration
             $table->timestamp('data_hora_fechamento')->nullable();
             $table->decimal('valor_inicial', 10, 2);
             $table->decimal('valor_final', 10, 2)->nullable();
+            $table->decimal('diferenca', 10, 2)->nullable();
             $table->enum('status', ['aberto', 'fechado'])->default('aberto');
             $table->timestamps();
         });

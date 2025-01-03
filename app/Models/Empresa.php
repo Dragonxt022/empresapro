@@ -66,4 +66,10 @@ class Empresa extends Model
     {
         return $this->hasMany(PaymentMethod::class);
     }
+
+    public function operacoes()
+    {
+        return $this->hasMany(CaixaOperacao::class, 'empresa_id');
+    }
+
 }

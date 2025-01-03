@@ -158,6 +158,15 @@ class MesaController extends Controller
                 $venda->status = 'pendente';
             }
 
+            // Associa a venda ao caixa aberto, se houver
+            $caixaAberto = \App\Models\CaixaMovimento::where('empresa_id', Auth::user()->empresa_id)
+                ->where('status', 'aberto')
+                ->first();
+
+            if ($caixaAberto) {
+                $venda->caixa_movimento_id = $caixaAberto->id;
+            }
+
             // Atualiza os dados básicos da venda
             $venda->valor_total = $validated['total'];
             $venda->save();
@@ -224,9 +233,6 @@ class MesaController extends Controller
     }
 
 
-
-
-
     public function finalizarVenda(Request $request, $mesaId)
     {
         $validated = $request->validate([
@@ -250,6 +256,15 @@ class MesaController extends Controller
 
             if (!$venda) {
                 throw new \Exception('Venda pendente não encontrada.');
+            }
+
+             // Associa a venda ao caixa, caso haja um caixa aberto
+            $caixaAberto = \App\Models\CaixaMovimento::where('empresa_id', Auth::user()->empresa_id)
+                ->where('status', 'aberto')
+                ->first();
+
+            if ($caixaAberto) {
+                $venda->caixa_movimento_id = $caixaAberto->id;
             }
 
             // Adiciona os pagamentos
@@ -294,8 +309,6 @@ class MesaController extends Controller
             return response()->json(['success' => false, 'message' => 'Erro ao finalizar a venda.', 'error' => $e->getMessage()], 500);
         }
     }
-
-
 
 
     // No seu controlador (MesaController ou VendaController)

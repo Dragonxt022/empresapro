@@ -27,6 +27,13 @@ class CaixaMovimento extends Model
     // Relacionamento com CaixaOperacoes
     public function operacoes()
     {
-        return $this->hasMany(CaixaOperacao::class);
+        return $this->hasMany(CaixaOperacao::class, 'caixa_movimento_id');
+    }
+
+
+    // Relacionamento com Vendas
+    public function vendas()
+    {
+        return $this->hasMany(Venda::class, 'caixa_movimento_id');
     }
 }

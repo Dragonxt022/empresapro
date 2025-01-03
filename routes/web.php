@@ -4,6 +4,7 @@ use App\Http\Controllers\CaixaBaocao;
 use App\Http\Controllers\CaixaMovimentoController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\HistoricoVendasController;
 use App\Http\Controllers\MesaController;
 use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\ProductController;
@@ -96,13 +97,26 @@ Route::middleware([
 
         // Historico
         Route::get('/api/historico/vendas', [MesaController::class, 'historicoDeVendas'])->name('historico.vendas');
+        Route::get('/api/historico/caixa', [HistoricoVendasController::class, 'obterDadosCaixa'])->name('historico.caixa');
+        Route::post('/api/caixa/operacoes', [HistoricoVendasController::class, 'adicionarOperacao'])->name('caixa.operacoes');
+        Route::get('/api/vendas/detalhes/{id}', [HistoricoVendasController::class, 'show'])->name('vendas.show');
+
+        Route::delete('/api/vendas/deletar/{id}', [HistoricoVendasController::class, 'destroy'])->name('vendas.destroy');
+
+
+
 
         // Operações de caixa
         // Verificar status do caixa
         Route::get('/api/caixa/status', [CaixaMovimentoController::class, 'verificarStatusCaixa'])->name('caixa.status');
 
+
+
         // Abrir caixa
         Route::post('/api/caixa/abrir', [CaixaMovimentoController::class, 'abrirCaixa'])->name('caixa.abrir');
+        // Fechar caixa
+        Route::post('/api/caixa/fechar', [CaixaMovimentoController::class, 'fecharCaixa'])->name('caixa.fechar');
+
 
 
 

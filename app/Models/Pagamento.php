@@ -21,4 +21,10 @@ class Pagamento extends Model
         return $this->belongsTo(Venda::class);
     }
 
+    public function paymentMethod()
+    {
+        return $this->belongsTo(PaymentMethod::class);
+    }
+
+
 }
