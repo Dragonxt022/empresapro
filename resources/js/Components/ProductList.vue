@@ -1,29 +1,31 @@
 <template>
   <!-- Categorias -->
-  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-8 gap-1 mt-2">
-    <div
-      v-for="category in categories"
-      :key="category.id"
-      class="flex flex-col items-center justify-center cursor-pointer transform transition-transform hover:scale-105"
-      @click="filterProducts(category.id)"
-    >
+  <div class="overflow-x-scroll h-[18%]">
+    <div class="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-11 gap-1">
       <div
-        class="w-16 h-16 rounded-full flex items-center justify-center bg-white shadow-xl transform transition-transform hover:scale-110 select-none"
-        :class="{ 'bg-blue-900': selectedCategory === category.id }"
+        v-for="category in categories"
+        :key="category.id"
+        class="flex flex-col items-center justify-center cursor-pointer transform transition-transform hover:scale-105 overflow-y-auto"
+        @click="filterProducts(category.id)"
       >
-        <img
-          :src="`/storage/${
-            category.image_path || 'default-product-image.jpg'
-          }`"
-          alt="Categoria"
-          class="w-full h-full rounded-full object-cover"
-        />
+        <div
+          class="w-16 h-16 rounded-full flex items-center justify-center bg-white shadow-xl transform transition-transform hover:scale-110 select-none"
+          :class="{ 'bg-blue-900': selectedCategory === category.id }"
+        >
+          <img
+            :src="`/storage/${
+              category.image_path || 'default-product-image.jpg'
+            }`"
+            alt="Categoria"
+            class="w-full h-full rounded-full object-cover"
+          />
+        </div>
+        <p
+          class="text-sm mt-1 text-center font-semibold text-gray-700 hover:text-blue-900 transition-colors"
+        >
+          {{ category.name }}
+        </p>
       </div>
-      <p
-        class="text-sm mt-1 text-center font-semibold text-gray-700 hover:text-blue-900 transition-colors"
-      >
-        {{ category.name }}
-      </p>
     </div>
   </div>
 

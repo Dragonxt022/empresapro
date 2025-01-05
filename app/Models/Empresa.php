@@ -24,6 +24,7 @@ class Empresa extends Model
         'company_type',
         'operating_since',
         'status',
+        'assinatura_id',
     ];
 
     protected $casts = [
@@ -72,4 +73,9 @@ class Empresa extends Model
         return $this->hasMany(CaixaOperacao::class, 'empresa_id');
     }
 
+    // Relacionamento de pertence a uma assinatura
+    public function assinatura()
+    {
+        return $this->belongsTo(Assinatura::class);
+    }
 }

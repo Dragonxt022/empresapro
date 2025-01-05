@@ -1,17 +1,13 @@
 <template>
-  <div class="relative mb-1 w-full">
+  <div class="mb-1 w-full">
     <!-- Input de pesquisa -->
     <input
       v-model="searchTerm"
       type="text"
-      placeholder="Busca por nome ou código de barras..."
-      class="border border-gray-300 rounded-lg w-full p-3 pl-12 pr-4 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 ease-in-out"
+      placeholder="Realizar busca..."
+      class="border border-gray-300 rounded-lg w-full p-3 pl-6 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 ease-in-out"
       @input="onSearch"
     />
-    <!-- Ícone de pesquisa -->
-    <i
-      class="fa-solid fa-search absolute left-5 top-1/2 transform -translate-y-1/2 text-gray-500"
-    ></i>
   </div>
 </template>
 

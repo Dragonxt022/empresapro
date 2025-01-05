@@ -6,17 +6,16 @@ import Slidebar from '@/Components/Slidebar.vue';
 
 // Recebendo as props do componente pai
 const props = defineProps({
-    title: String,
-
+  title: String,
 });
 </script>
 
 <template>
-    <Head :title="title" />
-    <div class="wrapper">
-        <Navbar />
-        <!-- Passando o user para o Slidebar -->
-        <Slidebar/>
-        <slot />
-    </div>
+  <Head :title="title" />
+  <div class="wrapper">
+    <Navbar />
+    <!-- Passando o user para o Slidebar -->
+    <Slidebar />
+    <slot />
+  </div>
 </template>

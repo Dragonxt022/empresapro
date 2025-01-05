@@ -130,7 +130,6 @@ const openCaixa = async () => {
     if (response.data.success) {
       caixaAberto.value = true;
       abrirCaixaModal.value = false;
-      emit('updateComponents'); // Usando emit diretamente
       notify.success('Caixa aberto com sucesso!', 'success');
     }
   } catch (error) {

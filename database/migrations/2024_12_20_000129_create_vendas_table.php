@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('mesa_id')->constrained('mesas')->onDelete('cascade');
             $table->foreignId('empresa_id')->constrained('empresas')->onDelete('cascade');
             // Define a chave estrangeira para a tabela caixa_movimentos
-            $table->foreign('caixa_movimento_id')->references('id')->on('caixa_movimentos')->onDelete('set null');
+            $table->foreignId('caixa_movimento_id')->nullable()->constrained('caixa_movimentos')->onDelete('set null');
 
             $table->string('cliente')->nullable(); // Cliente não identificado
             $table->string('status')->default('aberta'); // Status da venda, 'aberta' por padrão

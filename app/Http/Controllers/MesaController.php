@@ -38,16 +38,16 @@ class MesaController extends Controller
 
         // Consulta para buscar produtos
         $query = Product::with(['variations', 'category'])
-                        ->where('empresa_id', $empresaId)
-                        ->when($request->search, function ($q, $search) {
-                            $q->where('name', 'like', '%' . $search . '%')
-                            ->orWhere('sku', 'like', '%' . $search . '%');
-                        })
-                        ->when($request->category, function ($q, $category) {
-                            $q->whereHas('category', function ($subQuery) use ($category) {
-                                $subQuery->where('name', $category);
-                            });
-                        });
+            ->where('empresa_id', $empresaId)
+            ->when($request->search, function ($q, $search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                    ->orWhere('sku', 'like', '%' . $search . '%');
+            })
+            ->when($request->category, function ($q, $category) {
+                $q->whereHas('category', function ($subQuery) use ($category) {
+                    $subQuery->where('name', $category);
+                });
+            });
 
         $products = ProductResource::collection($query->orderBy($sortBy, $sortDirection)->paginate($perPage));
         $categories = Categorie::where('empresa_id', $empresaId)->get();
@@ -121,7 +121,6 @@ class MesaController extends Controller
             'success' => true,
             'message' => 'Mesa aberta com sucesso!',
         ]);
-
     }
 
 
@@ -222,7 +221,6 @@ class MesaController extends Controller
                 'message' => 'Venda salva ou atualizada com sucesso!',
                 'venda_id' => $venda->id
             ], $venda->wasRecentlyCreated ? 201 : 200);
-
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
@@ -258,7 +256,7 @@ class MesaController extends Controller
                 throw new \Exception('Venda pendente não encontrada.');
             }
 
-             // Associa a venda ao caixa, caso haja um caixa aberto
+            // Associa a venda ao caixa, caso haja um caixa aberto
             $caixaAberto = \App\Models\CaixaMovimento::where('empresa_id', Auth::user()->empresa_id)
                 ->where('status', 'aberto')
                 ->first();
@@ -303,7 +301,6 @@ class MesaController extends Controller
             DB::commit();
 
             return response()->json(['success' => true, 'message' => 'Venda finalizada com sucesso!'], 200);
-
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['success' => false, 'message' => 'Erro ao finalizar a venda.', 'error' => $e->getMessage()], 500);
@@ -339,7 +336,6 @@ class MesaController extends Controller
                 'success' => true,
                 'venda' => $venda,
             ], 200);
-
         } catch (\Exception $e) {
             // Capturando erros e retornando uma resposta adequada
             return response()->json([
@@ -348,60 +344,6 @@ class MesaController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
-    }
-
-    // Método para listar as vendas da empresa do usuário autenticado
-    public function historicoDeVendas()
-    {
-        // Obter o usuário autenticado
-        $user = Auth::user();
-
-        // Obter a empresa à qual o usuário pertence
-        $empresa = $user->empresa;
-
-        // Verificar se a empresa existe
-        if (!$empresa) {
-            return response()->json(['message' => 'Usuário não está vinculado a nenhuma empresa'], 400);
-        }
-
-        // Buscar todas as vendas da empresa, com seus relacionamentos
-        $vendas = Venda::with(['produtos', 'pagamentos', 'mesa', 'empresa', 'vendedor'])  // Carregar o relacionamento 'vendedor'
-            ->where('empresa_id', $empresa->id)  // Filtra pela empresa do usuário
-            ->get()
-            ->map(function ($venda) {
-                // Acessando o nome do vendedor, caso o relacionamento esteja carregado corretamente
-                $vendedorNome = $venda->vendedor ? $venda->vendedor->name : 'Não informado';
-
-                // Retornar apenas os campos necessários
-                return [
-                    'id' => $venda->id,
-                    'cliente' => $venda->cliente ?? 'Não informado',
-                    'valor_total' => number_format($venda->valor_total / 100, 2, ',', '.'),
-                    'desconto' => number_format($venda->desconto / 100, 2, ',', '.'),
-                    'acrescimo' => number_format($venda->acrescimo / 100, 2, ',', '.'),
-                    'vendedor' => $vendedorNome,  // Garantir que o nome do vendedor seja retornado corretamente
-                    'data_venda' => $venda->created_at->format('d-m-Y / H:i:s'), // Formatar a data
-                    'produtos' => $venda->produtos->map(function ($produto) {
-                        return [
-                            'nome' => $produto->nome,
-                            'quantidade' => $produto->quantidade,
-                            'valor_unitario' => number_format($produto->valor_unitario / 100, 2, ',', '.'),
-                            'valor_total' => number_format($produto->valor_total / 100, 2, ',', '.')
-                        ];
-                    }),
-                    'pagamentos' => $venda->pagamentos->map(function ($pagamento) {
-                        // Substituindo o ID do pagamento pelo nome do método de pagamento
-                        $metodoPagamento = PaymentMethod::find($pagamento->metodo);
-                        return [
-                            'forma_pagamento' => $metodoPagamento ? $metodoPagamento->name : 'Não informado',  // Retornar o nome do método de pagamento
-                            'valor' => number_format($pagamento->valor / 100, 2, ',', '.')
-                        ];
-                    })
-                ];
-            });
-
-        // Retornar as vendas com seus detalhes formatados
-        return response()->json($vendas);
     }
 
     public function excluirVenda($mesaId)
@@ -438,8 +380,6 @@ class MesaController extends Controller
         }
     }
 
-
-
     // Função para alterar o nome da mesa
     public function alterarNome($id, Request $request)
     {
@@ -470,16 +410,157 @@ class MesaController extends Controller
     }
 
 
+    // Método para listar as vendas da empresa do usuário autenticado
+    // public function historicoDeVendas()
+    // {
+    //     // Obter o usuário autenticado
+    //     $user = Auth::user();
+
+    //     // Obter a empresa à qual o usuário pertence
+    //     $empresa = $user->empresa;
+
+    //     // Verificar se a empresa existe
+    //     if (!$empresa) {
+    //         return response()->json(['message' => 'Usuário não está vinculado a nenhuma empresa'], 400);
+    //     }
+
+    //     // Buscar todas as vendas da empresa, com seus relacionamentos
+    //     $vendas = Venda::with(['produtos', 'pagamentos', 'mesa', 'empresa', 'vendedor'])  // Carregar o relacionamento 'vendedor'
+    //         ->where('empresa_id', $empresa->id)  // Filtra pela empresa do usuário
+    //         ->get()
+    //         ->map(function ($venda) {
+    //             // Acessando o nome do vendedor, caso o relacionamento esteja carregado corretamente
+    //             $vendedorNome = $venda->vendedor ? $venda->vendedor->name : 'Não informado';
+
+    //             // Retornar apenas os campos necessários
+    //             return [
+    //                 'id' => $venda->id,
+    //                 'cliente' => $venda->cliente ?? 'Não informado',
+    //                 'valor_total' => number_format($venda->valor_total / 100, 2, ',', '.'),
+    //                 'desconto' => number_format($venda->desconto / 100, 2, ',', '.'),
+    //                 'acrescimo' => number_format($venda->acrescimo / 100, 2, ',', '.'),
+    //                 'vendedor' => $vendedorNome,  // Garantir que o nome do vendedor seja retornado corretamente
+    //                 'data_venda' => $venda->created_at->format('d-m-Y / H:i:s'), // Formatar a data
+    //                 'produtos' => $venda->produtos->map(function ($produto) {
+    //                     return [
+    //                         'nome' => $produto->nome,
+    //                         'quantidade' => $produto->quantidade,
+    //                         'valor_unitario' => number_format($produto->valor_unitario / 100, 2, ',', '.'),
+    //                         'valor_total' => number_format($produto->valor_total / 100, 2, ',', '.')
+    //                     ];
+    //                 }),
+    //                 'pagamentos' => $venda->pagamentos->map(function ($pagamento) {
+    //                     // Substituindo o ID do pagamento pelo nome do método de pagamento
+    //                     $metodoPagamento = PaymentMethod::find($pagamento->metodo);
+    //                     return [
+    //                         'forma_pagamento' => $metodoPagamento ? $metodoPagamento->name : 'Não informado',  // Retornar o nome do método de pagamento
+    //                         'valor' => number_format($pagamento->valor / 100, 2, ',', '.')
+    //                     ];
+    //                 })
+    //             ];
+    //         });
+
+    //     // Retornar as vendas com seus detalhes formatados
+    //     return response()->json($vendas);
+    // }
 
 
+    public function historicoDeVendas(Request $request)
+    {
+        $user = Auth::user();
+        $empresa = $user->empresa;
 
+        if (!$empresa) {
+            return response()->json(['message' => 'Usuário não está vinculado a nenhuma empresa'], 400);
+        }
 
+        $query = Venda::with(['produtos', 'pagamentos', 'mesa', 'empresa', 'vendedor'])
+            ->where('empresa_id', $empresa->id)
+            ->where('status', '!=', 'pendente');
 
+        // Filtro por pesquisa
+        if ($request->has('search') && $request->input('search') != '') {
+            $searchTerm = $request->input('search');
 
+            $query->where(function ($query) use ($searchTerm) {
+                $query->where('cliente', 'LIKE', "%{$searchTerm}%")
+                    ->orWhere('valor_total', 'LIKE', "%{$searchTerm}%")
+                    ->orWhereHas('vendedor', function ($q) use ($searchTerm) {
+                        $q->where('first_name', 'LIKE', "%{$searchTerm}%")
+                            ->orWhere('last_name', 'LIKE', "%{$searchTerm}%");
+                    });
+            });
+        }
 
+        // Filtro por data
+        if ($request->has('data_inicio') && $request->has('data_fim')) {
+            $dataInicio = $request->input('data_inicio');
+            $dataFim = $request->input('data_fim');
 
+            // Validação básica das datas
+            if (strtotime($dataInicio) > strtotime($dataFim)) {
+                return response()->json(['message' => 'Data inicial não pode ser maior que a data final'], 400);
+            }
 
+            // Verifica a diferença de dias entre as datas
+            $dataInicioObj = new \Carbon\Carbon($dataInicio);
+            $dataFimObj = new \Carbon\Carbon($dataFim);
 
+            // Se a diferença for maior que 90 dias, ajusta a data final para 90 dias após a data inicial
+            if ($dataInicioObj->diffInDays($dataFimObj) > 90) {
+                $dataFimObj = $dataInicioObj->copy()->addDays(90);
+            }
 
+            // Atualiza as datas no filtro
+            $query->whereBetween('created_at', [$dataInicioObj->toDateString(), $dataFimObj->toDateString()]);
+        } else {
+            // Filtro padrão: vendas do dia atual
+            $query->whereDate('created_at', now()->toDateString());
+        }
 
+        // Filtro por ordem
+        $ordem = $request->input('ordem', 'mais_recentes'); // Default: mais recentes
+        $query->orderBy('created_at', $ordem === 'mais_antigas' ? 'asc' : 'desc');
+
+        // Recuperando os dados filtrados
+        $vendas = $query->get()->map(function ($venda) {
+            $vendedorNome = $venda->vendedor ? $venda->vendedor->name : 'Não informado';
+
+            return [
+                'id' => $venda->id,
+                'cliente' => $venda->cliente ?? 'Não informado',
+                'valor_total' => number_format($venda->valor_total / 100, 2, ',', '.'),
+                'desconto' => number_format($venda->desconto / 100, 2, ',', '.'),
+                'acrescimo' => number_format($venda->acrescimo / 100, 2, ',', '.'),
+                'vendedor' => $vendedorNome,
+                'data_venda' => $venda->created_at->format('d-m-Y / H:i:s'),
+                'vendedor' => $venda->vendedor ? [
+                    'first_name' => $venda->vendedor->first_name,
+                    'last_name' => $venda->vendedor->last_name,
+                    'full_name' => $venda->vendedor->first_name . ' ' . $venda->vendedor->last_name,
+                ] : [
+                    'first_name' => 'Não informado',
+                    'last_name' => '',
+                    'full_name' => 'Não informado',
+                ],
+                'produtos' => $venda->produtos->map(function ($produto) {
+                    return [
+                        'nome' => $produto->nome,
+                        'quantidade' => $produto->quantidade,
+                        'valor_unitario' => number_format($produto->valor_unitario / 100, 2, ',', '.'),
+                        'valor_total' => number_format($produto->valor_total / 100, 2, ',', '.')
+                    ];
+                }),
+                'pagamentos' => $venda->pagamentos->map(function ($pagamento) {
+                    $metodoPagamento = PaymentMethod::find($pagamento->metodo);
+                    return [
+                        'forma_pagamento' => $metodoPagamento ? $metodoPagamento->name : 'Não informado',
+                        'valor' => number_format($pagamento->valor / 100, 2, ',', '.')
+                    ];
+                })
+            ];
+        });
+
+        return response()->json($vendas);
+    }
 }

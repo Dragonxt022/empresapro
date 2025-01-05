@@ -27,6 +27,9 @@ return new class extends Migration
             $table->enum('company_type', ['MEI', 'LTDA', 'EIRELI', 'SA', 'Outros']);
             $table->date('operating_since')->nullable();
             $table->boolean('status')->default(true);
+
+            // Relacionamento com a assinatura
+            $table->foreignId('assinatura_id')->nullable()->constrained('assinaturas')->onDelete('set null');
             $table->timestamps();
         });
     }

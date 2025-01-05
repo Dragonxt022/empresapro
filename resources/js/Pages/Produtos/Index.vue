@@ -89,7 +89,7 @@
                             v-model="selectedCategory"
                             class="px-4 py-2 border rounded-lg text-gray-700 focus:outline-none focus:ring"
                           >
-                            <option value="">Filtrar por Categoria</option>
+                            <option value="">Filtrar</option>
                             <option
                               v-for="category in props.categories"
                               :key="category.id"
@@ -123,7 +123,7 @@
                           />
                         </div>
                         <table
-                          class="table-auto w-full text-left border-collapse mt-4 shadow-md rounded-lg overflow-hidden"
+                          class="min-w-full table-auto bg-white rounded-lg shadow-lg overflow-hidden mt-4"
                         >
                           <thead class="bg-gray-100 border-b">
                             <tr>
@@ -136,29 +136,33 @@
                                   class="cursor-pointer"
                                 />
                               </th>
-                              <th class="px-4 py-2">PRODUTO</th>
                               <th
-                                class="px-4 py-2 text-center hidden sm:table-cell"
+                                class="px-6 py-4 text-center text-sm font-semibold text-gray-600 uppercase tracking-wider"
+                              >
+                                PRODUTO
+                              </th>
+                              <th
+                                class="px-6 py-4 text-center text-sm font-semibold text-gray-600 uppercase tracking-wider hidden sm:table-cell"
                               >
                                 COD
                               </th>
                               <th
-                                class="px-4 py-2 text-center hidden md:table-cell"
+                                class="px-6 py-4 text-center text-sm font-semibold text-gray-600 uppercase tracking-wider hidden md:table-cell"
                               >
                                 CATEGORIA
                               </th>
                               <th
-                                class="px-4 py-2 text-center hidden lg:table-cell"
+                                class="px-6 py-4 text-center text-sm font-semibold text-gray-600 uppercase tracking-wider hidden lg:table-cell"
                               >
                                 ESTOQUE
                               </th>
                               <th
-                                class="px-4 py-2 text-center hidden xl:table-cell"
+                                class="px-6 py-4 text-center text-sm font-semibold text-gray-600 uppercase tracking-wider hidden xl:table-cell"
                               >
                                 VALOR DE CUSTO
                               </th>
                               <th
-                                class="px-4 py-2 text-center hidden xl:table-cell"
+                                class="px-6 py-4 text-center text-sm font-semibold text-gray-600 uppercase tracking-wider hidden xl:table-cell"
                               >
                                 VALOR DE VENDA
                               </th>
@@ -169,12 +173,12 @@
                             <tr
                               v-for="product in props.products.data"
                               :key="product.id"
-                              class="border-b"
+                              class="cursor-pointer hover:bg-gray-50 transition-colors duration-200"
                               @click="editarProduto(product)"
                               style="cursor: pointer"
                             >
                               <td
-                                class="px-4 py-2 relative cursor-pointer"
+                                class="px-6 py-4 text-sm text-gray-700 text-center relative cursor-pointer"
                                 @click="selecionarProduto(product.id)"
                                 @click.stop
                               >
@@ -187,7 +191,9 @@
                                   class="cursor-pointer"
                                 />
                               </td>
-                              <td class="px-4 py-2 flex items-center gap-2">
+                              <td
+                                class="px-6 py-4 text-sm text-gray-700 text-center flex items-center gap-2"
+                              >
                                 <img
                                   :src="
                                     '/storage/' +
@@ -201,7 +207,7 @@
                               </td>
 
                               <td
-                                class="px-4 py-2 text-center hidden sm:table-cell"
+                                class="px-6 py-4 text-sm text-gray-700 text-center hidden sm:table-cell"
                                 :style="{
                                   color:
                                     product.barcode === null ||
@@ -219,7 +225,7 @@
                                 {{ product.category }}
                               </td>
                               <td
-                                class="px-4 py-2 text-center hidden lg:table-cell"
+                                class="px-6 py-4 text-sm text-gray-700 text-center hidden lg:table-cell"
                               >
                                 {{ product.stock_quantity }}
                                 <!-- Componente do ícone de alerta -->
@@ -228,14 +234,14 @@
                                   :limiteMinimo="product.min_stock"
                                 />
                               </td>
-                              <!-- <td class="px-4 py-2 text-center hidden lg:table-cell">{{ product.stock_quantity}}</td> -->
+                              <!-- <td class="px-6 py-4 text-sm text-gray-700 text-center hidden lg:table-cell">{{ product.stock_quantity}}</td> -->
                               <td
-                                class="px-4 py-2 text-center hidden xl:table-cell"
+                                class="px-6 py-4 text-sm text-gray-700 text-center hidden xl:table-cell"
                               >
                                 R$ {{ product.cost_price }}
                               </td>
                               <td
-                                class="px-4 py-2 text-center hidden xl:table-cell"
+                                class="px-6 py-4 text-sm text-gray-700 text-center hidden xl:table-cell"
                               >
                                 R$ {{ product.price }}
                               </td>
@@ -443,12 +449,23 @@ const confirmarExclusao = async () => {
   display: block;
 }
 
-/* Efeito de brilho suave */
-tr:hover {
-  box-shadow: 0 0 0 2px rgba(0, 115, 255, 0.8); /* Brilho suave ao redor da linha */
-  border-radius: 3px; /* Bordas arredondadas */
-  transition: box-shadow 0.3s ease-in-out; /* Transição suave */
+.table-auto th,
+.table-auto td {
+  border-bottom: 1px solid #e0e0e0;
 }
+
+.table-auto th {
+  background-color: #f7f7f7;
+}
+
+.table-auto tbody tr:nth-child(odd) {
+  background-color: #f9fafb;
+}
+
+.table-auto tbody tr:hover {
+  background-color: #f1f5f9;
+}
+
 @keyframes slideFromRight {
   0% {
     transform: translateX(100%);

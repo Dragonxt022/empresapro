@@ -10,25 +10,28 @@
         <div
           class="flex items-center px-2 py-1 rounded-lg text-sm"
           :class="{
-            'bg-green-100 text-green-700': caixaStatus === 'aberto', // Caixa aberto
-            'bg-red-100 text-red-700': caixaStatus === 'fechado', // Caixa fechado
+            'bg-green-100 text-green-700': caixaStatus,
+            'bg-red-100 text-red-700': !caixaStatus,
           }"
         >
           <!-- Bolinha alterada conforme o status -->
           <div
             :class="{
-              'bg-green-500': caixaStatus === 'aberto', // Caixa aberto
-              'bg-red-500': caixaStatus === 'fechado', // Caixa fechado
+              'bg-green-500': caixaStatus,
+              'bg-red-500': !caixaStatus,
             }"
             class="w-2 h-2 rounded-full mr-2"
           ></div>
-          <span>{{ caixaStatus }}</span>
+          <span>{{ caixaStatus ? 'aberto' : 'fechado' }}</span>
         </div>
       </div>
     </div>
 
     <!-- Seção dos botões à direita -->
-    <div class="flex justify-end items-center space-x-2">
+    <div
+      v-if="caixaStatus === 'aberto'"
+      class="flex justify-end items-center space-x-2"
+    >
       <!-- Botões -->
       <button
         class="px-4 py-2 bg-blue-500 text-white rounded flex items-center space-x-2"
@@ -47,8 +50,8 @@
     </div>
   </div>
 
-  <div class="grid grid-cols-4 gap-4 mt-5">
-    <div v-if="caixaAberto" class="bg-white shadow rounded-md p-6">
+  <div v-if="caixaStatus === 'aberto'" class="grid grid-cols-4 gap-4 mt-5">
+    <div class="bg-white shadow rounded-md p-6">
       <div class="flex items-center space-x-2">
         <!-- Ícone de Vendas -->
         <i class="fas fa-shopping-cart text-gray-500"></i>
@@ -57,7 +60,7 @@
       <p class="text-gray-700">{{ totalVendas }}</p>
     </div>
 
-    <div v-if="caixaAberto" class="bg-white shadow rounded-md p-6">
+    <div class="bg-white shadow rounded-md p-6">
       <div class="flex items-center space-x-2">
         <!-- Ícone de Valor de Abertura -->
         <i class="fas fa-dollar-sign text-gray-500"></i>
@@ -66,7 +69,7 @@
       <p class="text-gray-700">{{ valorAbertura }}</p>
     </div>
 
-    <div v-if="caixaAberto" class="bg-white shadow rounded-md p-6">
+    <div class="bg-white shadow rounded-md p-6">
       <div class="flex items-center space-x-2">
         <!-- Ícone de Entradas -->
         <i class="fas fa-arrow-circle-up text-gray-500"></i>
@@ -75,7 +78,7 @@
       <p class="text-gray-700">{{ entradas }}</p>
     </div>
 
-    <div v-if="caixaAberto" class="bg-white shadow rounded-md p-6">
+    <div class="bg-white shadow rounded-md p-6">
       <div class="flex items-center space-x-2">
         <!-- Ícone de Saídas -->
         <i class="fas fa-arrow-circle-down text-gray-500"></i>
@@ -85,7 +88,7 @@
     </div>
   </div>
 
-  <div class="grid grid-cols-1 mt-6">
+  <div class="grid grid-cols-1 mt-12">
     <button
       :class="caixaStatus === 'aberto' ? 'bg-red-500' : 'bg-blue-500'"
       class="px-5 py-3 text-white rounded"
@@ -136,7 +139,7 @@
           type="number"
           id="entradaValor"
           class="mt-2 p-2 w-full border border-gray-300 rounded-lg"
-          placeholder="Digite o valor em caixa"
+          placeholder="0.00"
           min="0"
           @input="calcularDiferenca"
         />
@@ -147,13 +150,13 @@
         <label class="block text-sm font-medium text-gray-700">
           Total Vendas em Dinheiro
         </label>
-        <p class="mt-2 text-lg font-semibold">{{ vendasDinheiro }}</p>
+        <p class="mt-2 text-lg font-semibold">R$ {{ vendasDinheiro }}</p>
       </div>
 
       <!-- Diferença -->
       <div class="mb-4">
         <label class="block text-sm font-medium text-gray-700">Diferença</label>
-        <p class="mt-2 text-lg font-semibold">{{ diferenca }}</p>
+        <p class="mt-2 text-lg font-semibold">R$ {{ diferenca }}</p>
       </div>
 
       <div class="flex justify-between mt-6">
@@ -296,7 +299,7 @@ import { defineEmits } from 'vue';
 const emit = defineEmits(['updateComponents']);
 
 // Variáveis reativas
-const caixaStatus = ref('');
+
 const fecharCaixaModal = ref(false);
 
 const totalVendas = ref('R$ 0,00');
@@ -305,9 +308,9 @@ const entradas = ref('R$ 0,00');
 const saidas = ref('R$ 0,00');
 
 // Variáveis para o modal de fechar caixa
-const vendasDinheiro = ref('R$ 0,00'); // Total das vendas em dinheiro
-const valorEntradaCaixa = ref('R$ 0,00'); // Valor inserido pelo usuário
-const diferenca = ref('R$ 0,00'); // Diferença entre o valor do caixa e as vendas em dinheiro
+const vendasDinheiro = ref(0); // Total das vendas em dinheiro
+const valorEntradaCaixa = ref(0); // Valor inserido pelo usuário
+const diferenca = ref(0); // Diferença entre o valor do caixa e as vendas em dinheiro
 
 // Variáveis para os modais
 const isModalEntradaOpen = ref(false); // Controle para abrir/fechar a modal de entrada
@@ -319,7 +322,9 @@ const descricaoSaida = ref('');
 
 // Variáveis para o modal de abrir caixa
 const isLoading = ref(false);
+const caixaStatus = ref('');
 const caixaAberto = ref(false);
+
 const abrirCaixaModal = ref(false);
 const valorInicial = ref(0);
 
@@ -336,7 +341,7 @@ const obterDadosCaixa = async () => {
       valorAbertura.value = response.data.data.valor_abertura;
       entradas.value = response.data.data.total_entradas;
       saidas.value = response.data.data.total_saidas;
-      vendasDinheiro.value = response.data.data.total_vendas_dinheiro;
+      vendasDinheiro.value = response.data.data.valor_total_final;
       // Aqui você pode adicionar a lógica para entradas e saídas, se necessário.
     }
   } catch (error) {
@@ -404,15 +409,23 @@ const adicionarSaida = async () => {
 // Função para fechar o caixa
 const fecharCaixa = async () => {
   try {
+    // Converter valores para centavos
+    const valorFinalCentavos = Math.round(
+      parseFloat(String(valorEntradaCaixa.value || '0').replace(',', '.')) * 100
+    );
+    const diferencaCentavos = Math.round(
+      parseFloat(String(diferenca.value || '0').replace(',', '.')) * 100
+    );
+
+    // Enviar valores convertidos para a API
     const response = await axios.post('/api/caixa/fechar', {
-      valor_final: valorEntradaCaixa.value,
-      diferenca: diferenca.value,
+      valor_final: valorFinalCentavos,
+      diferenca: diferencaCentavos,
     });
 
     if (response.data.success) {
       notify.success('Caixa fechado com sucesso!');
       emit('updateComponents'); // Usando emit diretamente
-
       fecharCaixaModal.value = false; // Fecha a modal após a operação bem-sucedida
     } else {
       notify.error('Erro ao fechar o caixa');
@@ -454,8 +467,21 @@ const openCaixa = async () => {
 };
 
 const calcularDiferenca = () => {
-  const valorCaixa = parseFloat(valorEntradaCaixa.value || 0);
-  diferenca.value = valorCaixa - parseFloat(vendasDinheiro.value || 0);
+  const valorCaixa = parseFloat(
+    String(valorEntradaCaixa.value || '0').replace(',', '.')
+  );
+  const vendasDinheiroValor = parseFloat(
+    String(vendasDinheiro.value || '0').replace(',', '.')
+  );
+
+  // Calcular a diferença em centavos
+  const diferencaCentavos =
+    Math.round(valorCaixa * 100) - Math.round(vendasDinheiroValor * 100);
+
+  // Converter a diferença de volta para reais e formatar sem "R$"
+  diferenca.value = (diferencaCentavos / 100).toLocaleString('pt-BR', {
+    minimumFractionDigits: 2,
+  });
 };
 
 // Chama a função ao montar o componente

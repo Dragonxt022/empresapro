@@ -25,7 +25,7 @@ const navigateTo = (routeName) => {
             <div class="row">
               <!-- Adicione o conteúdo aqui -->
               <div class="col-12">
-                <h1 class="text-2xl font-bold text-sky-500 flex items-center">
+                <h1 class="text-2xl font-bold text-gray-600 flex items-center">
                   <!-- Ícone -->
                   <IconCofingPrimary class="h-6 w-6 mr-2" />
                   Ajustes
@@ -62,7 +62,7 @@ const navigateTo = (routeName) => {
                           />
                         </a>
                         <!-- Card 3 -->
-                        <a
+                        <!-- <a
                           @click.prevent="navigateTo('produtos')"
                           class="nav-link"
                         >
@@ -72,7 +72,7 @@ const navigateTo = (routeName) => {
                             bgColor="bg-white"
                             textColor="text-blue-500"
                           />
-                        </a>
+                        </a> -->
                         <!-- Card 4 -->
                         <a
                           @click.prevent="navigateTo('formas_pagamento')"
@@ -92,7 +92,7 @@ const navigateTo = (routeName) => {
                   <!-- Relatórios Section -->
                   <div class="row mb-2 mt-[50px]">
                     <div class="col-sm-6">
-                      <h4 class="text-2xl font-bold text-gray-800">
+                      <h4 class="text-2xl font-bold text-gray-600">
                         Relatórios
                       </h4>
                     </div>
@@ -115,7 +115,7 @@ const navigateTo = (routeName) => {
                           />
                         </a>
                         <!-- Card 2 -->
-                        <a
+                        <!-- <a
                           @click.prevent="navigateTo('produtos')"
                           class="nav-link"
                         >
@@ -125,13 +125,13 @@ const navigateTo = (routeName) => {
                             bgColor="bg-white"
                             textColor="text-blue-500"
                           />
-                        </a>
+                        </a> -->
                       </div>
                     </div>
                   </div>
 
                   <!-- Configurações Section -->
-                  <div class="row mb-2 mt-[50px]">
+                  <!-- <div class="row mb-2 mt-[50px]">
                     <div class="col-sm-6">
                       <h4 class="text-2xl font-bold text-gray-800">
                         Configurações
@@ -143,7 +143,7 @@ const navigateTo = (routeName) => {
                       <div
                         class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6"
                       >
-                        <!-- Card 1 -->
+
                         <a
                           @click.prevent="navigateTo('produtos')"
                           class="nav-link"
@@ -156,7 +156,7 @@ const navigateTo = (routeName) => {
                           />
                         </a>
 
-                        <!-- Card 4 -->
+
                         <a
                           @click.prevent="navigateTo('produtos')"
                           class="nav-link"
@@ -170,7 +170,7 @@ const navigateTo = (routeName) => {
                         </a>
                       </div>
                     </div>
-                  </div>
+                  </div> -->
                 </section>
               </div>
             </div>

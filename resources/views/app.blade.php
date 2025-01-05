@@ -6,6 +6,8 @@
         <link rel="shortcut icon" href="{{ asset('/storage/images/iconsistema.png') }}" type="image/x-icon">
 
         <title inertia>{{ config('app.name', 'ProVendas') }}</title>
+        <script src="https://sdk.mercadopago.com/js/v2"></script>
+
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.googleapis.com">

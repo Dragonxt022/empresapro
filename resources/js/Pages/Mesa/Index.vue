@@ -3,7 +3,10 @@
 import AppLayout from '@/Layouts/AppLayout.vue';
 import MesaComponent from '@/Components/MesaComponent.vue';
 import SalesPanel from '@/Components/SalesPanel.vue';
-import { ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
+import { router } from '@inertiajs/vue3'; // Importa o router diretamente
+import axios from 'axios';
+
 import IconShopPrimary from '@/Components/Icons/IconShopPrimary.vue';
 
 const emit = defineEmits();
@@ -14,6 +17,8 @@ const TABS = {
 
 const activeTab = ref(TABS.MESAS);
 const MesaId = ref(null);
+const caixaAberto = ref(false);
+const isLoading = ref(false);
 
 const props = defineProps({
   mesas: {
@@ -44,6 +49,38 @@ function updateMesa() {
   mesasKey.value++;
   console.log('Mesa atualizada');
 }
+
+const checkCaixaStatus = async () => {
+  try {
+    isLoading.value = true;
+    const response = await axios.get('/api/caixa/status');
+    caixaAberto.value = response.data.status === 'fechado';
+  } catch (error) {
+    console.error('Erro ao verificar o status do caixa:', error);
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+// Função personalizada para navegação
+const navigateTo = (routeName) => {
+  router.visit(route(routeName), {
+    preserveScroll: true, // Mantém o scroll atual
+    preserveState: false, // Reseta o estado
+  });
+};
+
+// Redirecionando para as mesas se o caixa estiver aberto
+watch(caixaAberto, (newVal) => {
+  if (newVal) {
+    navigateTo('dashboard');
+  }
+});
+
+// Verifica o status do caixa ao carregar a página
+onMounted(() => {
+  checkCaixaStatus();
+});
 </script>
 
 <template>

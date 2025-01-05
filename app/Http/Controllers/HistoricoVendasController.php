@@ -38,44 +38,44 @@ class HistoricoVendasController extends Controller
             }
 
             // Mapeando os dados da venda
-                $vendaFormatada = [
-                    'id' => $venda->id,
-                    'cliente' => $venda->cliente ?? 'Não informado',
-                    'data_venda' => $venda->created_at->format('d-m-Y / H:i:s'),
-                    'valor_total' => number_format($venda->valor_total / 100, 2, ',', '.'),
-                    'acrescimo' => number_format($venda->acrescimo / 100, 2, ',', '.'),
-                    'desconto' => number_format($venda->desconto / 100, 2, ',', '.'),
+            $vendaFormatada = [
+                'id' => $venda->id,
+                'cliente' => $venda->cliente ?? 'Não informado',
+                'data_venda' => $venda->created_at->format('d-m-Y / H:i:s'),
+                'valor_total' => number_format($venda->valor_total / 100, 2, ',', '.'),
+                'acrescimo' => number_format($venda->acrescimo / 100, 2, ',', '.'),
+                'desconto' => number_format($venda->desconto / 100, 2, ',', '.'),
 
-                    // Incluindo informações do vendedor
-                    'vendedor' => $venda->vendedor ? [
-                        'first_name' => $venda->vendedor->first_name,
-                        'last_name' => $venda->vendedor->last_name,
-                        'full_name' => $venda->vendedor->first_name . ' ' . $venda->vendedor->last_name,
-                    ] : [
-                        'first_name' => 'Não informado',
-                        'last_name' => '',
-                        'full_name' => 'Não informado',
-                    ],
+                // Incluindo informações do vendedor
+                'vendedor' => $venda->vendedor ? [
+                    'first_name' => $venda->vendedor->first_name,
+                    'last_name' => $venda->vendedor->last_name,
+                    'full_name' => $venda->vendedor->first_name . ' ' . $venda->vendedor->last_name,
+                ] : [
+                    'first_name' => 'Não informado',
+                    'last_name' => '',
+                    'full_name' => 'Não informado',
+                ],
 
-                    // Incluindo produtos
-                    'produtos' => $venda->produtos->map(function ($produto) {
-                        return [
-                            'nome' => $produto->nome,
-                            'quantidade' => $produto->quantidade,
-                            'valor_unitario' => number_format($produto->valor_unitario / 100, 2, ',', '.'),
-                            'valor_total' => number_format($produto->valor_total / 100, 2, ',', '.'),
-                        ];
-                    }),
+                // Incluindo produtos
+                'produtos' => $venda->produtos->map(function ($produto) {
+                    return [
+                        'nome' => $produto->nome,
+                        'quantidade' => $produto->quantidade,
+                        'valor_unitario' => number_format($produto->valor_unitario / 100, 2, ',', '.'),
+                        'valor_total' => number_format($produto->valor_total / 100, 2, ',', '.'),
+                    ];
+                }),
 
-                    // Incluindo pagamentos
-                    'pagamentos' => $venda->pagamentos->map(function ($pagamento) {
-                        $metodoPagamento = \App\Models\PaymentMethod::find($pagamento->metodo);
-                        return [
-                            'name' => $metodoPagamento ? $metodoPagamento->name : 'Desconhecido',
-                            'valor' => number_format($pagamento->valor / 100, 2, ',', '.'),
-                        ];
-                    }),
-                ];
+                // Incluindo pagamentos
+                'pagamentos' => $venda->pagamentos->map(function ($pagamento) {
+                    $metodoPagamento = \App\Models\PaymentMethod::find($pagamento->metodo);
+                    return [
+                        'name' => $metodoPagamento ? $metodoPagamento->name : 'Desconhecido',
+                        'valor' => number_format($pagamento->valor / 100, 2, ',', '.'),
+                    ];
+                }),
+            ];
 
 
             // Retornando os dados da venda formatados
@@ -83,7 +83,6 @@ class HistoricoVendasController extends Controller
                 'success' => true,
                 'venda' => $vendaFormatada,
             ], 200);
-
         } catch (\Exception $e) {
             // Capturando erros e retornando uma resposta adequada
             return response()->json([
@@ -130,7 +129,8 @@ class HistoricoVendasController extends Controller
 
         // Buscando todas as vendas do caixa aberto para a empresa
         $vendas = Venda::where('caixa_movimento_id', $caixaAberto->id)
-            ->where('empresa_id', Auth::user()->empresa_id) // Certificando-se de que a empresa do usuário é a correta
+            ->where('empresa_id', Auth::user()->empresa_id)
+            ->where('status', '!=', 'pendente') // Ignorar vendas com status "pendente"
             ->get();
 
         // Percorrendo todas as vendas para somar os pagamentos em dinheiro
@@ -158,12 +158,15 @@ class HistoricoVendasController extends Controller
             ->where('tipo', 'saida')
             ->sum('valor');
 
+        $valorTotalFinal = ($valorAbertura + $totalEntradas + $totalVendas) - $totalSaidas;
+
         // Convertendo de centavos para reais
         $totalVendasEmReais = number_format($totalVendas / 100, 2, ',', '.');
         $totalVendasDinheiroEmReais = number_format($totalVendasDinheiro / 100, 2, ',', '.');
         $valorAberturaEmReais = number_format($valorAbertura / 100, 2, ',', '.');
         $totalEntradasEmReais = number_format($totalEntradas / 100, 2, ',', '.');
         $totalSaidasEmReais = number_format($totalSaidas / 100, 2, ',', '.');
+        $valorTotalFinalEmReais = number_format($valorTotalFinal / 100, 2, ',', '.');
 
         // Retornando as informações solicitadas
         return response()->json([
@@ -175,6 +178,7 @@ class HistoricoVendasController extends Controller
                 'valor_abertura' => $valorAberturaEmReais,
                 'total_entradas' => $totalEntradasEmReais,
                 'total_saidas' => $totalSaidasEmReais,
+                'valor_total_final' => $valorTotalFinalEmReais,
             ],
         ], 200);
     }
@@ -193,8 +197,8 @@ class HistoricoVendasController extends Controller
 
             // Buscar a venda com o ID e da empresa correta
             $venda = Venda::where('id', $id)
-                          ->where('empresa_id', $empresaId)  // Verifica se a venda pertence à empresa do usuário
-                          ->firstOrFail(); // Lança uma exceção se a venda não for encontrada
+                ->where('empresa_id', $empresaId)  // Verifica se a venda pertence à empresa do usuário
+                ->firstOrFail(); // Lança uma exceção se a venda não for encontrada
 
             // Excluir a venda
             $venda->delete();
@@ -258,7 +262,4 @@ class HistoricoVendasController extends Controller
             ], 500);
         }
     }
-
-
-
 }

@@ -1,9 +1,7 @@
 <template>
   <div>
     <!-- Sidebar -->
-    <aside
-      class="bg-blue-900 shadow-lg h-screen w-16 md:w-[75px] flex flex-col"
-    >
+    <aside class="bg-red-700 shadow-lg h-screen w-16 md:w-[75px] flex flex-col">
       <!-- Sidebar User -->
       <div class="flex items-center justify-center p-4 mt-4 cursor-pointer">
         <a href="#" @click.prevent="navigateTo('dashboard')">
@@ -19,8 +17,8 @@
           <li>
             <a
               href="#"
-              @click.prevent="navigateTo('dashboard')"
-              class="flex flex-col items-center px-4 py-2 text-white hover:bg-blue-600 hover:text-white transition"
+              @click.prevent="navigateTo('admin.dashboard')"
+              class="flex flex-col items-center px-4 py-2 text-white hover:bg-red-600 hover:text-white transition"
             >
               <IconHomeBranco class="h-6 w-6 mb-1" />
               <span class="text-xs md:text-sm">Início</span>
@@ -29,24 +27,23 @@
           <li>
             <a
               href="#"
-              @click.prevent="navigateTo('historico')"
-              class="flex flex-col items-center px-4 py-2 text-white hover:bg-blue-600 hover:text-white transition"
+              @click.prevent="navigateTo('admin.assinaturas')"
+              class="flex flex-col items-center px-4 py-2 text-white hover:bg-red-600 hover:text-white transition"
             >
               <IconAnalytcBranco class="h-6 w-6 mb-1" />
-              <span class="text-xs md:text-sm">Histórico</span>
+              <span class="text-xs md:text-sm">Planos</span>
             </a>
           </li>
           <li>
             <a
               href="#"
-              @click.prevent="navigateTo('ajustes')"
-              class="flex flex-col items-center px-4 py-2 text-white hover:bg-blue-600 hover:text-white transition"
+              @click.prevent="navigateTo('admin.clientes')"
+              class="flex flex-col items-center px-4 py-2 text-white hover:bg-red-600 hover:text-white transition"
             >
               <IconCofingBranco class="h-6 w-6 mb-1" />
-              <span class="text-xs md:text-sm">Ajustes</span>
+              <span class="text-xs md:text-sm">Clientes</span>
             </a>
           </li>
-
           <li>
             <a
               href="#"

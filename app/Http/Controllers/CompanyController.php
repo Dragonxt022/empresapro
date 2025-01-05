@@ -6,11 +6,14 @@ use App\Models\Empresa;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Artisan;
 
 class CompanyController extends Controller
 {
     public function store(Request $request)
     {
+
+
         // Valida os dados da empresa e do usuário
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -34,6 +37,9 @@ class CompanyController extends Controller
             'password' => 'required|string|min:8|confirmed', // Validação de confirmação de senha
         ]);
 
+        // Incluindo o id da assinatura como 1
+        $validated['assinatura_id'] = 1; // Adiciona o id da assinatura automaticamente
+
         // Cria a empresa
         $company = Empresa::create($validated);
 
@@ -46,7 +52,28 @@ class CompanyController extends Controller
             'empresa_id' => $company->id, // Associa o usuário à empresa recém-criada
         ]);
 
+
+        // Rodando os seeders relacionados à empresa recém-criada
+        $this->runSeeders($company->id);
+
         // Redireciona para a página de login após o cadastro
         return redirect()->route('login'); // A rota 'login' do Laravel
+
+
+    }
+
+    /**
+     * Função que executa os seeders específicos para a empresa.
+     */
+    protected function runSeeders($companyId)
+    {
+        // Configurando a variável global com o ID da empresa
+        config(['app.empresa_id' => $companyId]);
+
+        // Rodando os seeders
+
+        Artisan::call('db:seed', ['--class' => 'ProductSeeder']);
+        Artisan::call('db:seed', ['--class' => 'PaymentMethodSeeder']);
+        Artisan::call('db:seed', ['--class' => 'MesaSeeder']);
     }
 }
