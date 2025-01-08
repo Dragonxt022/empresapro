@@ -32,8 +32,8 @@ class Assinatura extends Model
     ];
 
     // Relacionamento: Uma assinatura pode ter muitas empresas
-    public function empresas()
+    public function empresa()
     {
-        return $this->hasMany(Empresa::class);
+        return $this->belongsTo(Empresa::class);
     }
 }

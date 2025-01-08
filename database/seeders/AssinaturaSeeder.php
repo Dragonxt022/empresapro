@@ -3,66 +3,34 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
-use Faker\Factory as Faker;
+use App\Models\Assinatura;
+use App\Models\Plano; // Certifique-se de importar o modelo Plano
+use Carbon\Carbon;
 
 class AssinaturaSeeder extends Seeder
 {
     /**
      * Run the database seeds.
-     *
-     * @return void
      */
-    public function run()
+    public function run(): void
     {
-        $faker = Faker::create();
+        // Recupera o ID da empresa atual a partir da configuração
+        $empresa_id = config('app.empresa_id');
 
-        // Assinatura gratuita
-        DB::table('assinaturas')->insert([
-            'nome' => 'Plano Grátis',
-            'valor_mensal' => 0, // 0 centavos
-            'valor_total' => 0,  // 0 centavos
-            'dias' => 3,
-            'descricao' => 'Assinatura gratuita por 3 dias.',
-            'status' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        // Verifica se o ID da empresa está definido
+        if ($empresa_id) {
+            // Recupera o plano 'God' (ou o plano desejado) do banco de dados
+            $planoGod = Plano::where('nome', 'God')->first();
 
-        // Assinatura básica
-        DB::table('assinaturas')->insert([
-            'nome' => 'Plano Básico',
-            'valor_mensal' => 10000, // R$ 100,00 em centavos
-            'valor_total' => 10000,  // R$ 100,00 em centavos
-            'dias' => 30,
-            'descricao' => 'Assinatura básica por 30 dias.',
-            'status' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        // Assinatura premium
-        DB::table('assinaturas')->insert([
-            'nome' => 'Plano Premium',
-            'valor_mensal' => 9590,   // R$ 95,90 em centavos
-            'valor_total' => 28770,  // R$ 287,70 em centavos
-            'dias' => 90,
-            'descricao' => 'Assinatura premium por 90 dias.',
-            'status' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        // Assinatura Enterprise
-        DB::table('assinaturas')->insert([
-            'nome' => 'Plano Enterprise',
-            'valor_mensal' => 8590,   // R$ 85,90 em centavos
-            'valor_total' => 103080, // R$ 1.030,80 em centavos
-            'dias' => 365,
-            'descricao' => 'Assinatura Enterprise por 365 dias.',
-            'status' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+            // Cria a assinatura associada à empresa e ao plano
+            Assinatura::create([
+                'empresa_id' => $empresa_id,
+                'plano_id' => $planoGod->id, // Associa o ID do plano
+                'valor' => $planoGod->valor_total,
+                'inicio' => Carbon::now(),
+                'fim' => Carbon::now()->addDays($planoGod->duracao_dias),
+                'status' => 'ativa',
+            ]);
+        }
     }
 }

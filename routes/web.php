@@ -9,28 +9,41 @@ use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\HistoricoVendasController;
 use App\Http\Controllers\MesaController;
 use App\Http\Controllers\PaymentMethodController;
+use App\Http\Controllers\PlanoController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductImageController;
+use App\Http\Middleware\CheckSubscription;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
+// Rotas para uma aplicação online
+// Route::get('/', function () {
+//     return Inertia::render('Hause/HomePage', [
+//         'canLogin' => Route::has('login'),
+//         'canRegister' => Route::has('register'),
+
+//     ]);
+// });
 
 Route::get('/', function () {
-    return Inertia::render('Hause/HomePage', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-
-    ]);
+    return redirect()->route('login'); // Redireciona para a página de login
 });
 
 Route::post('/company/store', [CompanyController::class, 'store'])->name('company.store');
+
+
+// Rota para pegar os planos da API
+Route::get('/api/planos', [PlanoController::class, 'index'])
+    ->middleware('auth') // Middleware de autenticação
+    ->name('planos.assinatura');
 
 
 Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
     'verified',
+    CheckSubscription::class,
 ])->group(function () {
 
     Route::get('/dashboard', function () {
@@ -48,6 +61,10 @@ Route::middleware([
     Route::get('/tabela', function () {
         return inertia::render('Tabela/Index');
     })->name('tabela');
+
+    Route::get('/Planos', function () {
+        return inertia::render('Planos/Index');
+    })->name('planos');
 
     // Admin
     Route::get('/admin/dashboard', function () {
@@ -94,6 +111,7 @@ Route::middleware([
     // fim Admin
 
 
+
     // API Produters
     Route::get('/api/products', [CaixaBaocao::class, 'fetchProducts'])->name('products.fetch');
     Route::get('/api/paymentMethod', [PaymentMethodController::class, 'apiPaymentMethods'])->name('paymentMethod.fetch');
@@ -129,13 +147,13 @@ Route::middleware([
     Route::get('/api/vendas/{mesaId}', [MesaController::class, 'detalhesVenda'])->name('vendas.detalhes');
     Route::post('/api/vendas/finalizar/{mesaId}', [MesaController::class, 'finalizarVenda'])->name('vendas.finalizar');
 
-
-
-    // Alterar nome da mesa
+    // Mesas Gestão
     Route::put('/mesas/{id}/alterar-nome', [MesaController::class, 'alterarNome'])->name('mesas.alterar-nome');
-
-
     Route::delete('/api/vendas/{id}/excluir', [MesaController::class, 'excluirVenda'])->name('vendas.excluir');
+
+    Route::post('/api/mesas/alterar', [MesaController::class, 'alterarMesas'])->name('alterar.mesas');
+
+
 
 
     // Historico

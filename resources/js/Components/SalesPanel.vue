@@ -3,7 +3,9 @@
   <div class="modal-wrapper" v-if="isVisible">
     <div class="content-wrapper">
       <section>
-        <div class="grid grid-cols-1 lg:grid-cols-[450px_auto] gap-1 p-1">
+        <div
+          class="bg-blue-100 grid grid-cols-1 lg:grid-cols-[450px_auto] gap-1"
+        >
           <!-- Card Esquerdo -->
           <div class="bg-white shadow-sm rounded-lg p-2 flex flex-col h-full">
             <div class="flex items-center space-x-3 shadow-sm p-1 mb-2">
@@ -13,11 +15,11 @@
                 <i class="fa-solid fa-cart-shopping"></i>
               </div>
               <h4 class="text-xl font-bold text-sky-500">
-                {{ mesaId ? 'Mesa ' + mesaId : 'Selecione uma mesa' }}
+                {{ mesaNome || 'Selecione uma mesa' }}
               </h4>
               <div class="flex justify-end flex-grow">
                 <button
-                  @click="closePanel"
+                  @click="isFecharModalOpen = true"
                   class="rounded-full p-2 bg-red-500 hover:bg-red-600 text-white font-bold flex items-center space-x-2"
                 >
                   Voltar
@@ -27,32 +29,12 @@
             <div v-if="isLoading" class="loading-overlay">
               <div class="spinner"></div>
             </div>
-            <div v-else class="h-96 overflow-y-scroll mt-3 flex-grow">
-              <div class="flex flex-col space-y-2 font-semibold">
-                <div
-                  v-for="item in formattedCartItems"
-                  :key="item.id"
-                  class="flex items-center pb-1 mb-1"
-                >
-                  <div class="mr-2">
-                    <p
-                      class="w-7 h-7 rounded-lg bg-blue-400 flex items-center justify-center text-white"
-                    >
-                      {{ item.quantity }}
-                    </p>
-                  </div>
 
-                  <p class="text-gray-500 flex-grow font-weight-bold">
-                    {{ item.name }}
-                  </p>
-                  <div class="flex items-center space-x-2 flex-shrink-0">
-                    <p class="text-gray-500 font-weight-bold">
-                      {{ item.formattedPrice }}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <!-- Carrinho -->
+            <Cart
+              :formattedCartItems="cartItems"
+              @updateCart="updateCartItems"
+            />
 
             <div class="p-2 mb-2">
               <div class="text-gray-600 flex justify-between">
@@ -86,7 +68,7 @@
               </button>
               <!-- Botão para Limpar Carrinho -->
               <button
-                @click="excluirVenda(mesaId)"
+                @click="isDeleteModalOpen = true"
                 class="bg-red-500 hover:bg-red-600 text-white p-3 rounded-md flex items-center justify-center w-full"
               >
                 <i class="fa-solid fa-trash"></i>
@@ -191,6 +173,69 @@
         </div>
       </section>
     </div>
+
+    <!-- Modal de Confirmação -->
+    <transition name="fade">
+      <div
+        v-if="isDeleteModalOpen"
+        class="fixed inset-0 z-50 bg-gray-900 bg-opacity-50 flex justify-center items-center"
+      >
+        <!-- Modal Content -->
+        <div
+          class="bg-white p-8 rounded-lg shadow-xl w-96 max-w-sm transform transition-all duration-300 ease-in-out animate-modal"
+        >
+          <h3 class="text-xl font-semibold mb-4 text-center">
+            Tem certeza que deseja excluir esta venda?
+          </h3>
+          <p class="mb-6 text-gray-600">Essa ação não pode ser desfeita.</p>
+          <div class="flex justify-between">
+            <button
+              @click="excluirVenda(mesaId)"
+              class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 w-full mr-2"
+            >
+              Comfirmar
+            </button>
+            <button
+              @click="isDeleteModalOpen = false"
+              class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 w-full"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <transition name="fade">
+      <div
+        v-if="isFecharModalOpen"
+        class="fixed inset-0 z-50 bg-gray-900 bg-opacity-50 flex justify-center items-center"
+      >
+        <!-- Modal Content -->
+        <div
+          class="bg-white p-8 rounded-lg shadow-xl w-96 max-w-sm transform transition-all duration-300 ease-in-out animate-modal"
+        >
+          <h3 class="text-xl font-semibold mb-4 text-center">
+            Tem certeza que deseja sair sem salvar esta venda?
+          </h3>
+          <p class="mb-6 text-gray-600">Essa ação não pode ser desfeita.</p>
+          <div class="flex justify-between">
+            <button
+              @click="closePanel()"
+              class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 w-full mr-2"
+            >
+              Comfirmar
+            </button>
+            <button
+              @click="isFecharModalOpen = false"
+              class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 w-full"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -205,6 +250,7 @@ import ConfirmModal from './Elementos/ConfirmModal.vue';
 import { notify } from '@/Plugins/Notify';
 import axios from 'axios';
 import ConfirmModalPagamento from './Elementos/ConfirmModalPagamento.vue';
+import Cart from './Elementos/Cart.vue';
 
 const modalStore = useModalStore();
 
@@ -216,6 +262,9 @@ const isVisible = computed(() => modalStore.isSalesPanelVisible);
 const showDiscountModal = ref(false);
 const showAddValueModal = ref(false);
 const showPaymentMethodsModal = ref(false);
+
+const isDeleteModalOpen = ref(false);
+const isFecharModalOpen = ref(false);
 
 const addedValue = ref(0);
 const discountValue = ref(0);
@@ -229,9 +278,10 @@ const paymentMethodsSelected = ref([]);
 const showConfirmationModal = ref(false);
 const ConfirmarPagamento = ref(false);
 
-const handlePaymentMethods = (selectedPayments) => {
-  console.log('selectedPayments recebido no SalesPanel:', selectedPayments);
+const mesaId = computed(() => props.MesaSelecionada?.id || null);
+const mesaNome = computed(() => props.MesaSelecionada?.nome || 'Sem Nome');
 
+const handlePaymentMethods = (selectedPayments) => {
   // Verificar se 'methods' dentro de selectedPayments é um array
   if (Array.isArray(selectedPayments.methods)) {
     paymentMethodsSelected.value = selectedPayments.methods;
@@ -250,17 +300,7 @@ const handlePaymentMethods = (selectedPayments) => {
       remainingAmount.value = 0;
     }
 
-    // Log para verificar os valores
-    console.log(
-      'Métodos de pagamento selecionados:',
-      paymentMethodsSelected.value
-    );
-    console.log('Total pago:', totalPaid);
-    console.log('Valor restante:', remainingAmount.value);
-
-    console.log('Pagamento confirmado e venda salva');
-
-    saveSale();
+    saveSalePagamento();
   } else {
     console.error(
       'selectedPayments.methods não é um array:',
@@ -269,10 +309,14 @@ const handlePaymentMethods = (selectedPayments) => {
   }
 };
 
+const updateCartItems = (updatedCartItems) => {
+  cartItems.value = updatedCartItems; // Atualiza os itens do carrinho no SalesPanel
+};
+
 const props = defineProps({
-  mesaId: {
-    type: Number,
-    required: false,
+  MesaSelecionada: {
+    type: Object,
+    required: true,
   },
   products: {
     type: Object,
@@ -300,8 +344,8 @@ watch(
 watch(isVisible, (newValue) => {
   if (newValue) {
     // Quando o painel de vendas for visível, carregue os detalhes da venda
-    if (props.mesaId) {
-      fetchSaleDetails(props.mesaId);
+    if (props.MesaSelecionada.id) {
+      fetchSaleDetails(props.MesaSelecionada.id);
     }
   }
 });
@@ -331,16 +375,17 @@ const fetchSaleDetails = async (mesaId) => {
       remainingAmount.value =
         (venda.valor_total / 100) * 100 - totalWithDiscountAndAdd.value;
     } else {
-      console.error('Mesa não encontrada.');
+      console.error('Essa mesa ainda não foi salva!');
     }
   } catch (error) {
-    console.error('Erro ao buscar a venda:', error);
+    console.error('Essa mesa ainda não foi salva!');
   } finally {
     isLoading.value = false;
   }
 };
 
 const closePanel = () => {
+  isFecharModalOpen.value = false;
   resetFields();
   emit('updateMesa');
   modalStore.closeSalesPanel();
@@ -394,7 +439,7 @@ const formatCurrency = (valueInCents) => {
 
 const saveSale = async () => {
   const saleData = {
-    mesaId: props.mesaId,
+    mesaId: props.MesaSelecionada.id,
     products: cartItems.value,
     total: totalWithDiscountAndAdd.value,
   };
@@ -403,6 +448,24 @@ const saveSale = async () => {
     const response = await axios.post('/api/vendas/salvar', saleData);
     if (response.data.success) {
       notify.success('Venda salva com sucesso!');
+
+      closePanel();
+    }
+  } catch (error) {
+    notify.error(error.response?.data?.message || 'Erro ao salvar a venda.');
+  }
+};
+
+const saveSalePagamento = async () => {
+  const saleData = {
+    mesaId: props.MesaSelecionada.id,
+    products: cartItems.value,
+    total: totalWithDiscountAndAdd.value,
+  };
+
+  try {
+    const response = await axios.post('/api/vendas/salvar', saleData);
+    if (response.data.success) {
       emit('updateMesa');
     }
   } catch (error) {
@@ -412,7 +475,7 @@ const saveSale = async () => {
 
 const finalizeSale = async () => {
   const saleData = {
-    mesaId: props.mesaId,
+    mesaId: props.MesaSelecionada.id,
     payments: paymentMethodsSelected.value,
   };
 

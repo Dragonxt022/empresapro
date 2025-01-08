@@ -9,43 +9,93 @@
           :key="mesa.id"
           @click="alterarStatusMesa(mesa)"
         >
+          <!-- Barra de status -->
           <div
             :class="{
               'w-2 bg-green-500': mesa.status === 'aberto',
               'w-2 bg-yellow-500': mesa.status === 'em_espera',
-              'w-2 bg-blue-500': mesa.status === 'pendente', // Novo status
+              'w-2 bg-blue-500': mesa.status === 'pendente',
               'w-2 bg-gray-400': mesa.status === 'livre',
             }"
           ></div>
 
+          <!-- Conteúdo da mesa -->
           <div class="flex-1 p-4">
             <div class="flex items-center justify-between">
+              <!-- Ícones baseados no status -->
               <div class="flex items-center">
                 <svg
+                  v-if="mesa.status === 'livre'"
                   xmlns="http://www.w3.org/2000/svg"
+                  class="w-6 h-6 text-gray-400"
                   fill="none"
                   viewBox="0 0 24 24"
-                  stroke-width="1.5"
                   stroke="currentColor"
-                  :class="{
-                    'w-6 h-6 text-green-500': mesa.status === 'aberto',
-                    'w-6 h-6 text-yellow-500': mesa.status === 'em_espera',
-                    'w-6 h-6 text-blue-500': mesa.status === 'pendente', // Novo status
-                    'w-6 h-6 text-gray-400': mesa.status === 'livre',
-                  }"
+                  stroke-width="1.5"
                 >
                   <path
+                    d="M5 12h14M12 5v14"
                     stroke-linecap="round"
                     stroke-linejoin="round"
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+
+                <svg
+                  v-else-if="mesa.status === 'aberto'"
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="w-6 h-6 text-green-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path
+                    d="M9 12l2 2 4-4"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+
+                <svg
+                  v-else-if="mesa.status === 'em_espera'"
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="w-6 h-6 text-yellow-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path
+                    d="M12 6v6h6"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+
+                <svg
+                  v-else-if="mesa.status === 'pendente'"
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="w-6 h-6 text-blue-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path d="M16.24 7.76a6 6 0 11-8.48 8.48 6 6 0 018.48-8.48z" />
+                  <path
+                    d="M12 8v4l2 2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
                   />
                 </svg>
               </div>
+
+              <!-- Texto baseado no status -->
               <div
                 :class="{
                   'text-green-500': mesa.status === 'aberto',
                   'text-yellow-500': mesa.status === 'em_espera',
-                  'text-blue-500': mesa.status === 'pendente', // Novo status
+                  'text-blue-500': mesa.status === 'pendente',
                   'text-gray-400': mesa.status === 'livre',
                 }"
                 class="text-sm font-bold"
@@ -54,13 +104,15 @@
                   mesa.status === 'aberto'
                     ? 'Aberto'
                     : mesa.status === 'em_espera'
-                    ? 'Clique para confirmar'
-                    : mesa.status === 'pendente' // Novo status
+                    ? 'Clique para abrir'
+                    : mesa.status === 'pendente'
                     ? 'Pendente'
                     : 'Livre'
                 }}
               </div>
             </div>
+
+            <!-- Nome da mesa -->
             <div class="mt-4">
               <span
                 class="mt-2 font-medium text-gray-800 text-lg font-semibold"
@@ -68,21 +120,19 @@
                 {{ mesa.nome }}
               </span>
             </div>
-            <!-- Exibição do valor total e tempo aberto -->
+
+            <!-- Valor total e tempo aberto -->
             <div
               v-if="mesa.venda"
               class="flex items-center justify-between mt-2"
             >
-              <!-- Valor total -->
               <div class="text-gray-500 font-semibold text-md">
                 {{ mesa.venda.valor_total_formatado }}
               </div>
-
-              <!-- Tempo aberto -->
               <div
                 class="flex items-center font-semibold text-gray-500 text-sm"
               >
-                <IconTimePrimary class="h-3 w-3 mr-5 mb-3" />
+                <IconTimePrimary />
                 {{ mesa.venda.tempo_aberta }}
               </div>
             </div>
@@ -132,15 +182,18 @@ const alterarStatusMesa = (mesa) => {
   } else if (mesa.status === 'em_espera') {
     // Se a mesa estiver em espera, chama a API para abrir a mesa
     abrirMesa(mesa);
-    emit('mesa-click', mesa.id); // Usar emit
+    emit('mesa-click', { id: mesa.id, nome: mesa.nome });
+
     modalStore.openSalesPanel({ mesa });
   } else if (mesa.status === 'aberto') {
     // Emitindo o ID da mesa para o componente pai
-    emit('mesa-click', mesa.id); // Usar emit
+    emit('mesa-click', { id: mesa.id, nome: mesa.nome });
+
     modalStore.openSalesPanel({ mesa });
   } else if (mesa.status === 'pendente') {
     // Emitindo o ID da mesa para o componente pai
-    emit('mesa-click', mesa.id); // Usar emit
+    emit('mesa-click', { id: mesa.id, nome: mesa.nome });
+
     modalStore.openSalesPanel({ mesa });
   }
 };

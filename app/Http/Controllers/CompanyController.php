@@ -4,16 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Models\Empresa;
 use App\Models\User;
+use App\Models\Assinatura; // Importar o modelo Assinatura
+use App\Models\Plano;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Artisan;
+use Carbon\Carbon;
 
 class CompanyController extends Controller
 {
     public function store(Request $request)
     {
-
-
         // Valida os dados da empresa e do usuário
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -37,11 +38,28 @@ class CompanyController extends Controller
             'password' => 'required|string|min:8|confirmed', // Validação de confirmação de senha
         ]);
 
-        // Incluindo o id da assinatura como 1
-        $validated['assinatura_id'] = 1; // Adiciona o id da assinatura automaticamente
+        // Recupera o plano 'Free' para atribuir à empresa
+        $planoFree = Plano::where('nome', 'Free')->first();  // Aqui o nome está correto
 
         // Cria a empresa
         $company = Empresa::create($validated);
+
+        // Cria a assinatura 'Free' para a empresa com duração de 3 dias
+        if ($planoFree) {
+            $assinatura = Assinatura::create([
+                'plano' => $planoFree->nome,
+                'valor' => 0,
+                'inicio' => Carbon::now(),
+                'fim' => Carbon::now()->addDays(3), // Duração de 3 dias
+                'status' => 'ativa',
+                'empresa_id' => $company->id,
+                'plano_id' => $planoFree->id, // Associa o plano 'Free' à assinatura
+            ]);
+
+            // Associa a assinatura à empresa
+            $company->assinatura_id = $assinatura->id;
+            $company->save();
+        }
 
         // Cria o usuário e associa à empresa
         $user = User::create([
@@ -52,14 +70,11 @@ class CompanyController extends Controller
             'empresa_id' => $company->id, // Associa o usuário à empresa recém-criada
         ]);
 
-
         // Rodando os seeders relacionados à empresa recém-criada
         $this->runSeeders($company->id);
 
         // Redireciona para a página de login após o cadastro
         return redirect()->route('login'); // A rota 'login' do Laravel
-
-
     }
 
     /**
@@ -71,7 +86,6 @@ class CompanyController extends Controller
         config(['app.empresa_id' => $companyId]);
 
         // Rodando os seeders
-
         Artisan::call('db:seed', ['--class' => 'ProductSeeder']);
         Artisan::call('db:seed', ['--class' => 'PaymentMethodSeeder']);
         Artisan::call('db:seed', ['--class' => 'MesaSeeder']);

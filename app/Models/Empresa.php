@@ -76,6 +76,6 @@ class Empresa extends Model
     // Relacionamento de pertence a uma assinatura
     public function assinatura()
     {
-        return $this->belongsTo(Assinatura::class);
+        return $this->hasOne(Assinatura::class);
     }
 }

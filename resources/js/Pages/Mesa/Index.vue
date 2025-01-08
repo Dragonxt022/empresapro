@@ -8,6 +8,7 @@ import { router } from '@inertiajs/vue3'; // Importa o router diretamente
 import axios from 'axios';
 
 import IconShopPrimary from '@/Components/Icons/IconShopPrimary.vue';
+import ModalConfiguracaoMesa from '@/Components/Elementos/ModalConfiguracaoMesa.vue';
 
 const emit = defineEmits();
 const TABS = {
@@ -16,7 +17,7 @@ const TABS = {
 };
 
 const activeTab = ref(TABS.MESAS);
-const MesaId = ref(null);
+const MesaSelecionada = ref(null);
 const caixaAberto = ref(false);
 const isLoading = ref(false);
 
@@ -41,8 +42,8 @@ const props = defineProps({
 
 let mesasKey = ref(0);
 
-function selectMesa(id) {
-  MesaId.value = id;
+function selectMesa(data) {
+  MesaSelecionada.value = data;
 }
 
 function updateMesa() {
@@ -102,35 +103,36 @@ onMounted(() => {
                 </h1>
                 <section class="mt-4">
                   <!-- Navegação de Abas -->
-                  <div class="border-b border-gray-200">
-                    <nav class="flex space-x-4 px-4" role="tablist">
+                  <div class="flex justify-between items-center">
+                    <div class="flex space-x-4">
                       <button
-                        :class="
-                          activeTab === TABS.MESAS
-                            ? 'text-purple-600 border-b-4 border-purple-600'
-                            : 'text-gray-500'
-                        "
-                        class="px-4 py-2 text-sm font-medium focus:outline-none"
+                        class="px-4 py-3 rounded-t-lg focus:outline-none"
+                        :class="{
+                          'bg-white text-blue-600 font-semibold':
+                            activeTab === TABS.MESAS,
+                          'bg-gray-100 text-gray-600': activeTab !== TABS.MESAS,
+                        }"
                         @click="activeTab = TABS.MESAS"
-                        role="tab"
-                        :aria-selected="activeTab === TABS.MESAS"
                       >
                         Mesas
                       </button>
                       <button
-                        :class="
-                          activeTab === TABS.BALCAO
-                            ? 'text-purple-600 border-b-4 border-purple-600'
-                            : 'text-gray-500'
-                        "
-                        class="px-4 py-2 text-sm font-medium focus:outline-none"
+                        class="px-4 py-3 rounded-t-lg focus:outline-none"
+                        :class="{
+                          'bg-white text-blue-600 font-semibold':
+                            activeTab === TABS.BALCAO,
+                          'bg-gray-100 text-gray-600':
+                            activeTab !== TABS.BALCAO,
+                        }"
                         @click="activeTab = TABS.BALCAO"
-                        role="tab"
-                        :aria-selected="activeTab === TABS.BALCAO"
                       >
                         Balcão
                       </button>
-                    </nav>
+                    </div>
+
+                    <div class="flex gap-2">
+                      <ModalConfiguracaoMesa @updateMesa="updateMesa" />
+                    </div>
                   </div>
 
                   <!-- Conteúdo das Abas -->
@@ -138,18 +140,20 @@ onMounted(() => {
                     <div class="container-fluid">
                       <div class="row">
                         <div v-if="activeTab === TABS.MESAS" class="col-12">
-                          <MesaComponent
-                            :mesas="mesas"
-                            @mesa-click="selectMesa"
-                            :key="mesasKey"
-                          />
-                          <SalesPanel
-                            :products="products"
-                            :categories="categories"
-                            :filters="filters"
-                            :mesa-id="MesaId"
-                            @updateMesa="updateMesa"
-                          />
+                          <div class="bg-white shadow rounded-lg p-6">
+                            <MesaComponent
+                              :mesas="mesas"
+                              @mesa-click="selectMesa"
+                              :key="mesasKey"
+                            />
+                            <SalesPanel
+                              :products="products"
+                              :categories="categories"
+                              :filters="filters"
+                              :Mesa-selecionada="MesaSelecionada"
+                              @updateMesa="updateMesa"
+                            />
+                          </div>
                         </div>
 
                         <div v-if="activeTab === TABS.BALCAO" class="col-12">

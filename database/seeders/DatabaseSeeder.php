@@ -14,7 +14,8 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Assinaturas
-        $this->call(AssinaturaSeeder::class);
+        $this->call(PlanoSeeder::class);
+        // $this->call(AssinaturaSeeder::class);
 
         // Empresa e Admim
         $this->call(AdminUserSeeder::class);

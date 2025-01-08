@@ -11,6 +11,7 @@ use App\Models\Venda;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
 
 class MesaController extends Controller
@@ -410,61 +411,6 @@ class MesaController extends Controller
     }
 
 
-    // Método para listar as vendas da empresa do usuário autenticado
-    // public function historicoDeVendas()
-    // {
-    //     // Obter o usuário autenticado
-    //     $user = Auth::user();
-
-    //     // Obter a empresa à qual o usuário pertence
-    //     $empresa = $user->empresa;
-
-    //     // Verificar se a empresa existe
-    //     if (!$empresa) {
-    //         return response()->json(['message' => 'Usuário não está vinculado a nenhuma empresa'], 400);
-    //     }
-
-    //     // Buscar todas as vendas da empresa, com seus relacionamentos
-    //     $vendas = Venda::with(['produtos', 'pagamentos', 'mesa', 'empresa', 'vendedor'])  // Carregar o relacionamento 'vendedor'
-    //         ->where('empresa_id', $empresa->id)  // Filtra pela empresa do usuário
-    //         ->get()
-    //         ->map(function ($venda) {
-    //             // Acessando o nome do vendedor, caso o relacionamento esteja carregado corretamente
-    //             $vendedorNome = $venda->vendedor ? $venda->vendedor->name : 'Não informado';
-
-    //             // Retornar apenas os campos necessários
-    //             return [
-    //                 'id' => $venda->id,
-    //                 'cliente' => $venda->cliente ?? 'Não informado',
-    //                 'valor_total' => number_format($venda->valor_total / 100, 2, ',', '.'),
-    //                 'desconto' => number_format($venda->desconto / 100, 2, ',', '.'),
-    //                 'acrescimo' => number_format($venda->acrescimo / 100, 2, ',', '.'),
-    //                 'vendedor' => $vendedorNome,  // Garantir que o nome do vendedor seja retornado corretamente
-    //                 'data_venda' => $venda->created_at->format('d-m-Y / H:i:s'), // Formatar a data
-    //                 'produtos' => $venda->produtos->map(function ($produto) {
-    //                     return [
-    //                         'nome' => $produto->nome,
-    //                         'quantidade' => $produto->quantidade,
-    //                         'valor_unitario' => number_format($produto->valor_unitario / 100, 2, ',', '.'),
-    //                         'valor_total' => number_format($produto->valor_total / 100, 2, ',', '.')
-    //                     ];
-    //                 }),
-    //                 'pagamentos' => $venda->pagamentos->map(function ($pagamento) {
-    //                     // Substituindo o ID do pagamento pelo nome do método de pagamento
-    //                     $metodoPagamento = PaymentMethod::find($pagamento->metodo);
-    //                     return [
-    //                         'forma_pagamento' => $metodoPagamento ? $metodoPagamento->name : 'Não informado',  // Retornar o nome do método de pagamento
-    //                         'valor' => number_format($pagamento->valor / 100, 2, ',', '.')
-    //                     ];
-    //                 })
-    //             ];
-    //         });
-
-    //     // Retornar as vendas com seus detalhes formatados
-    //     return response()->json($vendas);
-    // }
-
-
     public function historicoDeVendas(Request $request)
     {
         $user = Auth::user();
@@ -562,5 +508,93 @@ class MesaController extends Controller
         });
 
         return response()->json($vendas);
+    }
+
+    // Controle de Criação de Mesas
+    public function alterarMesas(Request $request)
+    {
+        // Validação do número de mesas
+        $validator = Validator::make($request->all(), [
+            'num_mesas' => 'required|integer|min:1|max:100', // Número de mesas entre 1 e 100
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'É necessário fornecer um número válido de mesas (mínimo 1 e máximo 100).'
+            ], 400);
+        }
+
+        $numMesasDesejadas = $request->num_mesas;
+
+        // Obter o ID da empresa do usuário autenticado
+        $empresaId = Auth::user()->empresa_id;
+
+        // Obter todas as mesas existentes para a empresa do usuário autenticado
+        $mesasExistentes = Mesa::where('empresa_id', $empresaId)->get();
+
+        // Obter as mesas ocupadas
+        $mesasOcupadas = $mesasExistentes->where('status', 'ocupada');
+
+        // Caso o número de mesas seja maior, gerar novas mesas
+        if ($numMesasDesejadas > $mesasExistentes->count()) {
+            // Criar novas mesas até atingir o limite de 100 mesas
+            $quantidadeParaAdicionar = $numMesasDesejadas - $mesasExistentes->count();
+
+            if ($mesasExistentes->count() + $quantidadeParaAdicionar > 100) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'O limite de 100 mesas foi atingido. Não é possível criar mais mesas.'
+                ], 400);
+            }
+
+            for ($i = 0; $i < $quantidadeParaAdicionar; $i++) {
+                Mesa::create([
+                    'empresa_id' => $empresaId,
+                    'nome' => 'Mesa ' . ($mesasExistentes->count() + $i + 1), // Nome para nova mesa
+                    'status' => 'livre',
+                ]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => "$quantidadeParaAdicionar novas mesas foram geradas com sucesso!"
+            ]);
+        }
+
+        // Caso o número de mesas seja menor, verificar as mesas ocupadas
+        if ($numMesasDesejadas < $mesasExistentes->count()) {
+            // Calcular quantas mesas precisam ser removidas
+            $quantidadeRemover = $mesasExistentes->count() - $numMesasDesejadas;
+
+            // Verificar se há mesas ocupadas entre as que serão removidas
+            $mesasRemover = $mesasExistentes->sortByDesc('nome')->take($quantidadeRemover);
+
+            // Se houver mesas ocupadas entre as mesas que seriam removidas, não permitimos a remoção
+            foreach ($mesasRemover as $mesa) {
+                if ($mesa->status === 'pendente') {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Não é possível remover mesas ocupadas."
+                    ], 400);
+                }
+            }
+
+            // Remover mesas livres (as mesas removidas são da última para a primeira)
+            $mesasRemover->each(function ($mesa) {
+                $mesa->delete();
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => "$quantidadeRemover mesas foram removidas com sucesso!"
+            ]);
+        }
+
+        // Caso o número de mesas já seja igual ao desejado
+        return response()->json([
+            'success' => true,
+            'message' => 'O número de mesas já está correto.'
+        ]);
     }
 }

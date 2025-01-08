@@ -8,29 +8,28 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     *
-     * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::create('assinaturas', function (Blueprint $table) {
-            $table->id(); // ID da assinatura
-            $table->string('nome'); // Nome da assinatura
-            $table->decimal('valor_mensal', 10, 2); // Valor mensal
-            $table->decimal('valor_total', 10, 2); // Valor total
-            $table->integer('dias'); // Duração em dias
-            $table->text('descricao')->nullable(); // Descrição da assinatura
-            $table->boolean('status')->default(true); // Status (ativo/inativo)
-            $table->timestamps(); // Campos created_at e updated_at
+            $table->id();
+
+            $table->string('plano'); // Ex: 'Grátis', 'Básico', 'Premium', 'Enterprise'
+            $table->decimal('valor', 10, 2);
+            $table->date('inicio');
+            $table->date('fim');
+            $table->enum('status', ['ativa', 'expirada', 'cancelada'])->default('ativa');
+            $table->timestamps();
+
+            $table->foreignId('plano_id')->constrained('planos')->onDelete('cascade');
+            $table->foreignId('empresa_id')->constrained('empresas')->onDelete('cascade');
         });
     }
 
     /**
      * Reverse the migrations.
-     *
-     * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('assinaturas');
     }
