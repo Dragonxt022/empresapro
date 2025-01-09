@@ -104,7 +104,7 @@ const navigateTo = (routeName) => {
                       >
                         <!-- Card 1 -->
                         <a
-                          @click.prevent="navigateTo('produtos')"
+                          @click.prevent="navigateTo('caixas.index')"
                           class="nav-link"
                         >
                           <CardComponent

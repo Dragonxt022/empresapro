@@ -476,6 +476,7 @@ const saveSalePagamento = async () => {
 const finalizeSale = async () => {
   const saleData = {
     mesaId: props.MesaSelecionada.id,
+    products: cartItems.value,
     payments: paymentMethodsSelected.value,
   };
 

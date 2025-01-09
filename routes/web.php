@@ -66,6 +66,10 @@ Route::middleware([
         return inertia::render('Planos/Index');
     })->name('planos');
 
+    Route::get('/Caixas', function () {
+        return inertia::render('Caixas/Index');
+    })->name('caixas.index');
+
     // Admin
     Route::get('/admin/dashboard', function () {
         // Verificar se o usuário é admin
@@ -178,4 +182,8 @@ Route::middleware([
     Route::post('/api/caixa/abrir', [CaixaMovimentoController::class, 'abrirCaixa'])->name('caixa.abrir');
     // Fechar caixa
     Route::post('/api/caixa/fechar', [CaixaMovimentoController::class, 'fecharCaixa'])->name('caixa.fechar');
+    // Hístórico de caixas
+    Route::get('/api/relatorio-caixas', [CaixaMovimentoController::class, 'gerarRelatorio'])->name('realtorio.caixas');
+    // Detalhes de vendas do caixa!
+    Route::get('/api/detalhes-caixa/{id}', [CaixaMovimentoController::class, 'gerarDetalhesCaixa'])->name('detalhes.caixa');
 });

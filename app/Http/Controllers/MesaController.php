@@ -234,8 +234,13 @@ class MesaController extends Controller
 
     public function finalizarVenda(Request $request, $mesaId)
     {
+
+        // Validação dos parâmetros
         $validated = $request->validate([
             'mesaId' => 'required|integer|exists:mesas,id',
+            'products' => 'required|array|min:1', // Para garantir que os produtos são passados
+            'products.*.id' => 'required|integer|exists:products,id', // Valida os IDs dos produtos
+            'products.*.quantity' => 'required|integer|min:1', // Valida a quantidade dos produtos
             'payments' => 'required|array|min:1',
             'payments.*.name' => 'required|string',
             'payments.*.amount' => 'required|numeric|min:0',
@@ -244,9 +249,9 @@ class MesaController extends Controller
         try {
             DB::beginTransaction();
 
+            // Verifica a mesa e busca a venda pendente
             $mesaId = $validated['mesaId'];
 
-            // Busca a venda pendente
             $venda = \App\Models\Venda::with('produtos')
                 ->where('mesa_id', $mesaId)
                 ->where('empresa_id', Auth::user()->empresa_id)
@@ -257,7 +262,7 @@ class MesaController extends Controller
                 throw new \Exception('Venda pendente não encontrada.');
             }
 
-            // Associa a venda ao caixa, caso haja um caixa aberto
+            // Associa a venda ao caixa, se houver caixa aberto
             $caixaAberto = \App\Models\CaixaMovimento::where('empresa_id', Auth::user()->empresa_id)
                 ->where('status', 'aberto')
                 ->first();
@@ -266,10 +271,10 @@ class MesaController extends Controller
                 $venda->caixa_movimento_id = $caixaAberto->id;
             }
 
-            // Adiciona os pagamentos
-            $venda->pagamentos()->delete();  // Exclui os pagamentos anteriores, caso existam
+            // Exclui os pagamentos antigos
+            $venda->pagamentos()->delete();
 
-            // Cria os novos pagamentos
+            // Cria os pagamentos a partir da requisição
             foreach ($validated['payments'] as $payment) {
                 $venda->pagamentos()->create([
                     'venda_id' => $venda->id,
@@ -278,23 +283,28 @@ class MesaController extends Controller
                 ]);
             }
 
-            // Atualiza o status da venda para "finalizada"
+            // Atualiza o status da venda para 'finalizada'
             $venda->status = 'finalizada';
             $venda->save();
 
-            // Atualiza o status da mesa
+            // Atualiza o status da mesa para 'livre'
             $mesa = \App\Models\Mesa::find($mesaId);
             if ($mesa) {
-                $mesa->status = 'livre';  // Marca a mesa como livre
+                $mesa->status = 'livre';
                 $mesa->save();
             }
 
-            // Atualiza o estoque dos produtos vendidos
-            foreach ($venda->produtos as $produto) {
-                $produtoEstoque = \App\Models\Product::find($produto->id);
+            // Atualiza o estoque com os produtos enviados na requisição
+            foreach ($validated['products'] as $produto) {
+                $produtoEstoque = \App\Models\Product::find($produto['id']); // Busca o produto pelo ID
+
                 if ($produtoEstoque) {
-                    // Permite estoque negativo
-                    $produtoEstoque->stock_quantity -= $produto->quantidade;
+                    // Atualiza o estoque, descontando a quantidade vendida
+                    $produtoEstoque->stock_quantity -= $produto['quantity'];
+                    // Se quiser permitir estoque negativo, basta remover a verificação
+                    // if ($produtoEstoque->stock_quantity < 0) {
+                    //     throw new \Exception('Estoque insuficiente para o produto: ' . $produtoEstoque->name);
+                    // }
                     $produtoEstoque->save();
                 }
             }
@@ -307,6 +317,7 @@ class MesaController extends Controller
             return response()->json(['success' => false, 'message' => 'Erro ao finalizar a venda.', 'error' => $e->getMessage()], 500);
         }
     }
+
 
 
     // No seu controlador (MesaController ou VendaController)

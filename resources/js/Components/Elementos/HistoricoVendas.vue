@@ -224,19 +224,8 @@ watch([filtroPesquisa, filtroDataInicio, filtroDataFim], () => {
 
 // Chama a função para buscar as vendas ao carregar o componente
 onMounted(() => {
-  // Definir o filtro de data para o dia de ontem e hoje ao carregar o componente
-  const hoje = new Date();
-
-  // Configura a data de início (ontem)
-  const ontem = new Date(hoje);
-  ontem.setDate(hoje.getDate() - 1); // Subtrai um dia para pegar a data de ontem
-
-  // Define o filtro para o início e fim do intervalo de dois dias
-  filtroDataInicio.value = ontem.toISOString().split('T')[0]; // yyyy-mm-dd (ontem)
-  filtroDataFim.value = hoje.toISOString().split('T')[0]; // yyyy-mm-dd (hoje)
-
   // Chama a função para buscar as vendas com o filtro de data dos dois dias
-  fetchVendas();
+  aplicarFiltroData(2);
 });
 
 // Função para exibir detalhes no modal

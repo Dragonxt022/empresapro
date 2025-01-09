@@ -15,6 +15,7 @@ class CaixaMovimento extends Model
         'data_hora_fechamento',
         'valor_inicial',
         'valor_final',
+        'diferenca',
         'status',
     ];
 

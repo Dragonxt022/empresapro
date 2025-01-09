@@ -190,15 +190,28 @@ class HistoricoVendasController extends Controller
     {
         try {
             // Obter o usuário autenticado
-            $user = Auth::user(); // Usando o Auth corretamente, com a notação adequada
+            $user = Auth::user();
 
             // Verificar a empresa associada ao usuário autenticado
             $empresaId = $user->empresa_id;
 
-            // Buscar a venda com o ID e da empresa correta
-            $venda = Venda::where('id', $id)
+            // Buscar a venda com o ID e da empresa correta, carregando os produtos relacionados
+            $venda = Venda::with('produtos')  // Carrega os produtos relacionados à venda
+                ->where('id', $id)
                 ->where('empresa_id', $empresaId)  // Verifica se a venda pertence à empresa do usuário
                 ->firstOrFail(); // Lança uma exceção se a venda não for encontrada
+
+            // Atualiza o estoque dos produtos antes de excluir a venda
+            foreach ($venda->produtos as $produtoVenda) {
+                // Acessa o produto pelo relacionamento no modelo VendaProduto (usando product_id)
+                $produtoEstoque = \App\Models\Product::find($produtoVenda->product_id);  // Acessa o estoque com o product_id
+
+                if ($produtoEstoque) {
+                    // Atualiza a quantidade do estoque, somando a quantidade que foi vendida
+                    $produtoEstoque->stock_quantity += $produtoVenda->quantidade;
+                    $produtoEstoque->save();
+                }
+            }
 
             // Excluir a venda
             $venda->delete();
@@ -208,6 +221,9 @@ class HistoricoVendasController extends Controller
             return response()->json(['success' => false, 'message' => 'Erro ao excluir a venda.', 'error' => $e->getMessage()], 500);
         }
     }
+
+
+
 
     public function adicionarOperacao(Request $request)
     {

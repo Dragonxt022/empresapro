@@ -178,7 +178,16 @@
           <h3 class="text-xl font-semibold mb-4 text-center">
             Tem certeza que deseja excluir esta venda?
           </h3>
-          <p class="mb-6 text-gray-600">Essa ação não pode ser desfeita.</p>
+          <p class="mb-7 text-gray-600 text-center">
+            <span class="text-red-500 mt-2 font-semibold">
+              Essa ação não pode ser desfeita!
+            </span>
+            <br />
+            <span class="text-sm">
+              Ao exlcuir essa venda todos os produtos venditos nessa venda, a
+              quantidade será reposa novamente no estoque.
+            </span>
+          </p>
           <div class="flex justify-between">
             <button
               @click="deleteVenda(detalhesVenda.id)"
