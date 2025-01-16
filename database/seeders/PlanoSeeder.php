@@ -18,6 +18,7 @@ class PlanoSeeder extends Seeder
             'valor_mensal' => 0.00,
             'valor_total' => 0.00,
             'duracao_dias' => 3,
+            'quantidade' => 1,
         ]);
 
         Plano::create([
@@ -26,6 +27,7 @@ class PlanoSeeder extends Seeder
             'valor_mensal' => 100.00,
             'valor_total' => 100.00,
             'duracao_dias' => 30,
+            'quantidade' => 1,
         ]);
 
         Plano::create([
@@ -34,6 +36,7 @@ class PlanoSeeder extends Seeder
             'valor_mensal' => 95.90,
             'valor_total' => 287.70,
             'duracao_dias' => 90,
+            'quantidade' => 3,
         ]);
 
         Plano::create([
@@ -42,6 +45,7 @@ class PlanoSeeder extends Seeder
             'valor_mensal' => 85.90,
             'valor_total' => 1030.80,
             'duracao_dias' => 365,
+            'quantidade' => 12,
         ]);
     }
 }

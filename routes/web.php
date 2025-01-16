@@ -12,6 +12,7 @@ use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\PlanoController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductImageController;
+use App\Http\Controllers\SubscriptionController;
 use App\Http\Middleware\CheckSubscription;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -33,12 +34,25 @@ Route::get('/', function () {
 Route::post('/company/store', [CompanyController::class, 'store'])->name('company.store');
 
 
-// Rota para pegar os planos da API
-Route::get('/api/planos', [PlanoController::class, 'index'])
-    ->middleware('auth') // Middleware de autenticação
-    ->name('planos.assinatura');
 
 
+Route::middleware([
+    'auth:sanctum',
+    config('jetstream.auth_session'),
+    'verified',
+
+])->group(function () {
+
+    // Rota para pegar os planos da API
+    Route::get('/api/planos', [PlanoController::class, 'index'])->name('planos.assinatura');
+    Route::post('/api/checkout', [SubscriptionController::class, 'checkout']);
+    Route::get('/api/checkout/success', [SubscriptionController::class, 'success'])->name('checkout.success');
+    Route::get('/api/checkout/cancel', [SubscriptionController::class, 'cancel'])->name('checkout.cancel');
+});
+
+
+
+// Rotas protegidas da aplicação
 Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
@@ -110,12 +124,6 @@ Route::middleware([
     // API Admin - Assinaturas
     Route::get('/api/admin/assinaturas', [AssinaturaController::class, 'index'])->name('admin.assinaturas.listar');
 
-
-
-    // fim Admin
-
-
-
     // API Produters
     Route::get('/api/products', [CaixaBaocao::class, 'fetchProducts'])->name('products.fetch');
     Route::get('/api/paymentMethod', [PaymentMethodController::class, 'apiPaymentMethods'])->name('paymentMethod.fetch');
@@ -157,9 +165,6 @@ Route::middleware([
 
     Route::post('/api/mesas/alterar', [MesaController::class, 'alterarMesas'])->name('alterar.mesas');
 
-
-
-
     // Historico
     Route::get('/api/historico/vendas', [MesaController::class, 'historicoDeVendas'])->name('historico.vendas');
 
@@ -169,14 +174,9 @@ Route::middleware([
 
     Route::delete('/api/vendas/deletar/{id}', [HistoricoVendasController::class, 'destroy'])->name('vendas.destroy');
 
-
-
-
     // Operações de caixa
     // Verificar status do caixa
     Route::get('/api/caixa/status', [CaixaMovimentoController::class, 'verificarStatusCaixa'])->name('caixa.status');
-
-
 
     // Abrir caixa
     Route::post('/api/caixa/abrir', [CaixaMovimentoController::class, 'abrirCaixa'])->name('caixa.abrir');

@@ -14,6 +14,7 @@ class Plano extends Model
         'id_produto_stripe',
         'valor_mensal',
         'valor_total',
-        'duracao_dias'
+        'duracao_dias',
+        'quantidade',
     ];
 }

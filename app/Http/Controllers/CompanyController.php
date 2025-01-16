@@ -39,27 +39,28 @@ class CompanyController extends Controller
         ]);
 
         // Recupera o plano 'Free' para atribuir à empresa
-        $planoFree = Plano::where('nome', 'Free')->first();  // Aqui o nome está correto
+        $planoFree = Plano::where('nome', 'Free')->first();
+        if (!$planoFree) {
+            return response()->json(['error' => 'Plano não encontrado'], 404);
+        }
 
         // Cria a empresa
         $company = Empresa::create($validated);
 
         // Cria a assinatura 'Free' para a empresa com duração de 3 dias
-        if ($planoFree) {
-            $assinatura = Assinatura::create([
-                'plano' => $planoFree->nome,
-                'valor' => 0,
-                'inicio' => Carbon::now(),
-                'fim' => Carbon::now()->addDays(3), // Duração de 3 dias
-                'status' => 'ativa',
-                'empresa_id' => $company->id,
-                'plano_id' => $planoFree->id, // Associa o plano 'Free' à assinatura
-            ]);
+        $assinatura = Assinatura::create([
+            'plano' => $planoFree->nome,
+            'valor' => 0,
+            'inicio' => Carbon::now(),
+            'fim' => Carbon::now()->addDays(3), // Duração de 3 dias
+            'status' => 'ativa',
+            'empresa_id' => $company->id,
+            'plano_id' => $planoFree->id, // Associa o plano 'Free' à assinatura
+        ]);
 
-            // Associa a assinatura à empresa
-            $company->assinatura_id = $assinatura->id;
-            $company->save();
-        }
+        // Associa a assinatura à empresa
+        $company->assinatura_id = $assinatura->id;
+        $company->save(); // Atualiza a empresa com o ID da assinatura
 
         // Cria o usuário e associa à empresa
         $user = User::create([
@@ -74,8 +75,9 @@ class CompanyController extends Controller
         $this->runSeeders($company->id);
 
         // Redireciona para a página de login após o cadastro
-        return redirect()->route('login'); // A rota 'login' do Laravel
+        return redirect()->route('login');
     }
+
 
     /**
      * Função que executa os seeders específicos para a empresa.

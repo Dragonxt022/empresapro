@@ -18,6 +18,7 @@ return new class extends Migration
             $table->decimal('valor_mensal', 10, 2);
             $table->decimal('valor_total', 10, 2);
             $table->integer('duracao_dias'); // Quantos dias dura o plano
+            $table->integer('quantidade')->default(1);
             $table->timestamps();
         });
     }
